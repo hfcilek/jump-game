@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doodle Jump - Platform Atlama Oyunu</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="ui-container">
+            <div class="score-container">
+                <div class="score">Skor: <span id="current-score">0</span></div>
+                <div class="high-score">En Yüksek: <span id="high-score">0</span></div>
+            </div>
+            <div class="controls-info">
+                <div>← → veya A D: Hareket</div>
+                <div>SPACE: Başlat/Tekrar</div>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="400" height="600"></canvas>
+        
+        <div class="game-over-screen" id="gameOverScreen">
+            <h2>Oyun Bitti!</h2>
+            <p>Skorunuz: <span id="final-score">0</span></p>
+            <p>En Yüksek Skor: <span id="final-high-score">0</span></p>
+            <button id="restartBtn">Tekrar Oyna</button>
+        </div>
+        
+        <div class="start-screen" id="startScreen">
+            <h1>Doodle Jump</h1>
+            <p>← → veya A D ile hareket et</p>
+            <p>Platformlara zıpla ve yüksel!</p>
+            <button id="startBtn">Oyunu Başlat</button>
+        </div>
+        
+        <!-- Mobil kontroller -->
+        <div class="mobile-controls">
+            <button class="mobile-btn left-btn" id="leftBtn">◀</button>
+            <button class="mobile-btn right-btn" id="rightBtn">▶</button>
+        </div>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/platform.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
