@@ -190,16 +190,22 @@ body {
 }
 
 .mobile-controls {
-    display: none;
-    position: absolute;
-    bottom: -80px;
+    display: none; /* Desktop'ta gizli */
+    position: fixed;
+    bottom: 20px;
     left: 0;
     right: 0;
     width: 100%;
     height: 80px;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    padding: 0 30px;
+    gap: 20px;
+    padding: 10px 0;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    margin: 0 10px;
+    z-index: 50;
+    backdrop-filter: blur(10px);
 }
 
 .arrow-btn {
@@ -330,16 +336,13 @@ body {
     }
     
     .mobile-controls {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 20px;
-        padding: 10px 0;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
-        margin: 0 10px;
-        position: relative;
-        bottom: 0;
+        display: flex !important; /* Mobilde göster */
+        position: fixed !important;
+        bottom: 10px !important;
+        left: 10px !important;
+        right: 10px !important;
+        width: auto !important;
+        margin: 0 !important;
     }
     
     .arrow-btn {
@@ -453,4 +456,65 @@ body {
     .super-jump-text {
         font-size: 7px;
     }
+}
+
+#gameCanvas {
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%);
+    display: block;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+.game-over-screen, .start-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    z-index: 100;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.game-over-screen.hidden, .start-screen.hidden {
+    display: none;
+}
+
+.game-over-screen h2, .start-screen h1 {
+    color: #e74c3c;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.game-over-screen p, .start-screen p {
+    margin-bottom: 10px;
+    color: #2c3e50;
+}
+
+#restartBtn, #startBtn {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+#restartBtn:hover, #startBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+#restartBtn:active, #startBtn:active {
+    transform: translateY(0);
 }
