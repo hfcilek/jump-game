@@ -93,42 +93,85 @@ class Game {
             this.startGame();
         });
         
-        // Basit mobil kontroller - sadece temel eventler
+        // İyileştirilmiş mobil kontroller
         const leftBtn = document.getElementById('leftBtn');
         const rightBtn = document.getElementById('rightBtn');
         const superJumpBtn = document.getElementById('superJumpBtn');
         
         if (leftBtn) {
-            leftBtn.addEventListener('touchstart', () => {
+            // Touch events
+            leftBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
                 this.keys['ArrowLeft'] = true;
+                leftBtn.classList.add('touching');
+                this.addTouchFeedback(leftBtn);
             });
-            leftBtn.addEventListener('touchend', () => {
+            leftBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
                 this.keys['ArrowLeft'] = false;
+                leftBtn.classList.remove('touching');
+            });
+            // Mouse events for testing
+            leftBtn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                this.keys['ArrowLeft'] = true;
+                leftBtn.classList.add('touching');
+            });
+            leftBtn.addEventListener('mouseup', (e) => {
+                e.preventDefault();
+                this.keys['ArrowLeft'] = false;
+                leftBtn.classList.remove('touching');
+            });
+            leftBtn.addEventListener('mouseleave', (e) => {
+                this.keys['ArrowLeft'] = false;
+                leftBtn.classList.remove('touching');
             });
         }
         
         if (rightBtn) {
-            rightBtn.addEventListener('touchstart', () => {
+            // Touch events
+            rightBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
                 this.keys['ArrowRight'] = true;
+                rightBtn.classList.add('touching');
+                this.addTouchFeedback(rightBtn);
             });
-            rightBtn.addEventListener('touchend', () => {
+            rightBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
                 this.keys['ArrowRight'] = false;
+                rightBtn.classList.remove('touching');
+            });
+            // Mouse events for testing
+            rightBtn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                this.keys['ArrowRight'] = true;
+                rightBtn.classList.add('touching');
+            });
+            rightBtn.addEventListener('mouseup', (e) => {
+                e.preventDefault();
+                this.keys['ArrowRight'] = false;
+                rightBtn.classList.remove('touching');
+            });
+            rightBtn.addEventListener('mouseleave', (e) => {
+                this.keys['ArrowRight'] = false;
+                rightBtn.classList.remove('touching');
             });
         }
         
         if (superJumpBtn) {
-            superJumpBtn.addEventListener('touchstart', (e) => {
+            const handleSuperJump = (e) => {
                 e.preventDefault();
                 if (this.gameState === 'playing' && this.player.superJump()) {
                     this.addTouchFeedback(superJumpBtn);
+                    superJumpBtn.classList.add('touching');
+                    setTimeout(() => {
+                        superJumpBtn.classList.remove('touching');
+                    }, 150);
                 }
-            });
-            superJumpBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (this.gameState === 'playing' && this.player.superJump()) {
-                    this.addTouchFeedback(superJumpBtn);
-                }
-            });
+            };
+            
+            superJumpBtn.addEventListener('touchstart', handleSuperJump);
+            superJumpBtn.addEventListener('click', handleSuperJump);
         }
         
         // Canvas boyutlandırma
@@ -137,29 +180,48 @@ class Game {
     }
     
     addTouchFeedback(button = null) {
-        // Titreşim feedback'i
+        // Güçlü titreşim feedback'i
         if (navigator.vibrate) {
-            navigator.vibrate(30);
+            if (button && button.id === 'superJumpBtn') {
+                navigator.vibrate([50, 30, 50]); // Süper jump için özel pattern
+            } else {
+                navigator.vibrate(40); // Normal butonlar için
+            }
         }
         
-        // Button için görsel feedback
+        // Button için gelişmiş görsel feedback
         if (button) {
-            button.style.transform = 'scale(0.95)';
+            button.style.transform = 'scale(0.9)';
+            button.style.filter = 'brightness(1.2)';
+            
             setTimeout(() => {
                 button.style.transform = '';
-            }, 100);
+                button.style.filter = '';
+            }, 150);
         }
     }
     
     resizeCanvas() {
         const container = document.querySelector('.game-container');
-        const containerWidth = container.clientWidth - 40;
         
         if (window.innerWidth <= 768) {
-            const maxWidth = Math.min(containerWidth, 400);
-            this.canvas.style.width = maxWidth + 'px';
-            this.canvas.style.height = (maxWidth * 1.5) + 'px';
+            // Mobil cihazlar için tam boyut optimizasyonu
+            const availableHeight = window.innerHeight - 180; // UI ve kontroller için alan bırak
+            const availableWidth = window.innerWidth - 20; // Padding için alan
+            
+            // Aspect ratio'yu koru (2:3)
+            let canvasWidth = Math.min(availableWidth, 400);
+            let canvasHeight = canvasWidth * 1.5;
+            
+            if (canvasHeight > availableHeight) {
+                canvasHeight = availableHeight;
+                canvasWidth = canvasHeight / 1.5;
+            }
+            
+            this.canvas.style.width = canvasWidth + 'px';
+            this.canvas.style.height = canvasHeight + 'px';
         } else {
+            // Desktop için standart boyut
             this.canvas.style.width = '400px';
             this.canvas.style.height = '600px';
         }
