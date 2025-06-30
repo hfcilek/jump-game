@@ -255,19 +255,35 @@ class Game {
     update() {
         if (this.gameState !== 'playing') return;
         
-        this.handleInput();
-        this.player.update(this.canvas);
-        
-        this.platforms.forEach(platform => {
-            platform.update(this.canvas);
-        });
-        
-        this.checkCollisions();
-        this.updateCamera();
-        this.generatePlatforms();
-        this.updateScore();
-        this.checkGameOver();
-        this.updateUI();
+        try {
+            this.handleInput();
+            this.player.update(this.canvas);
+            
+            // Platform güncelleme - sadece yakındakileri
+            const nearbyPlatforms = this.platforms.filter(platform => 
+                Math.abs(platform.y - this.player.y) < 200
+            );
+            
+            nearbyPlatforms.forEach(platform => {
+                platform.update(this.canvas);
+            });
+            
+            this.checkCollisions();
+            this.updateCamera();
+            
+            // Platform üretimini her 10 frame'de bir yap
+            if (Math.floor(Date.now() / 100) % 10 === 0) {
+                this.generatePlatforms();
+            }
+            
+            this.updateScore();
+            this.checkGameOver();
+            this.updateUI();
+        } catch (error) {
+            console.error('Game update error:', error);
+            // Hata durumunda oyunu durdur
+            this.gameState = 'gameOver';
+        }
     }
     
     checkCollisions() {
@@ -309,35 +325,18 @@ class Game {
     
     generatePlatforms() {
         // Platform üretimi sadece gerektiğinde yap
-        const highestPlatformY = Math.min(...this.platforms.map(p => p.y));
+        if (this.platforms.length === 0) return; // Güvenlik kontrolü
+        
+        const highestPlatformY = Math.min(...this.platforms.map(p => p.y || 0));
         const targetY = this.camera.y - 800;
         
         if (highestPlatformY > targetY) {
-            // Toplu platform üretimi - performans için
-            const platformsToGenerate = Math.floor((highestPlatformY - targetY) / 70);
+            // Güvenli platform üretimi
+            const platformsToGenerate = Math.min(10, Math.floor((highestPlatformY - targetY) / 70));
             
             for (let i = 0; i < platformsToGenerate; i++) {
                 const x = Utils.getRandomFloat(20, this.canvas.width - 100);
-                
-                // Mevcut yüksekliğe göre zorluk ayarla
-                const currentHeight = Math.abs(highestPlatformY - (i * 70));
-                let minGap, maxGap;
-                
-                if (currentHeight < 1000) {
-                    minGap = 50;
-                    maxGap = 70;
-                } else if (currentHeight < 2500) {
-                    minGap = 60;
-                    maxGap = 80;
-                } else if (currentHeight < 5000) {
-                    minGap = 70;
-                    maxGap = 90;
-                } else {
-                    minGap = 75;
-                    maxGap = 100;
-                }
-                
-                const y = highestPlatformY - (i + 1) * Utils.getRandomFloat(minGap, maxGap);
+                const y = highestPlatformY - ((i + 1) * Utils.getRandomFloat(60, 90));
                 
                 let type = 'normal';
                 const rand = Math.random();
@@ -353,7 +352,7 @@ class Game {
         // Görünmeyen platformları temizle - performans için önemli
         const cleanupThreshold = this.camera.y + this.canvas.height + 300;
         this.platforms = this.platforms.filter(platform => 
-            platform.y < cleanupThreshold
+            platform && platform.y < cleanupThreshold
         );
     }
     
@@ -393,29 +392,38 @@ class Game {
     }
     
     render() {
-        // Canvas'ı temizle
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
-        this.ctx.save();
-        this.ctx.translate(0, -this.camera.y);
-        
-        // Arka planı çiz
-        this.drawBackground();
-        
-        // Sadece görünür alandaki platformları çiz
-        const visiblePlatforms = this.platforms.filter(platform => 
-            platform.y > this.camera.y - 100 && 
-            platform.y < this.camera.y + this.canvas.height + 100
-        );
-        
-        visiblePlatforms.forEach(platform => {
-            platform.draw(this.ctx);
-        });
-        
-        // Oyuncuyu çiz
-        this.player.draw(this.ctx);
-        
-        this.ctx.restore();
+        try {
+            // Canvas'ı temizle
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            this.ctx.save();
+            this.ctx.translate(0, -this.camera.y);
+            
+            // Arka planı çiz
+            this.drawBackground();
+            
+            // Sadece görünür alandaki platformları çiz
+            const visiblePlatforms = this.platforms.filter(platform => 
+                platform && 
+                platform.y > this.camera.y - 100 && 
+                platform.y < this.camera.y + this.canvas.height + 100
+            );
+            
+            visiblePlatforms.forEach(platform => {
+                if (platform && platform.draw) {
+                    platform.draw(this.ctx);
+                }
+            });
+            
+            // Oyuncuyu çiz
+            if (this.player && this.player.draw) {
+                this.player.draw(this.ctx);
+            }
+            
+            this.ctx.restore();
+        } catch (error) {
+            console.error('Render error:', error);
+        }
     }
     
     drawBackground() {
@@ -428,32 +436,20 @@ class Game {
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, this.camera.y, this.canvas.width, this.canvas.height);
         
-        // Performans için efektleri azalt
-        if (this.score % 5 === 0) {  // Her 5 frame'de bir çiz
-            // Bulut efekti - sayıyı azalt
-            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        // Performans için efektleri her 10 frame'de bir çiz
+        if (Date.now() % 200 < 50) {  // Her 200ms'de 50ms süreyle
+            // Basit bulut efekti
+            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
             
-            for (let i = 0; i < 8; i++) {  // 15'ten 8'e düşür
-                const x = (i * 80 + this.camera.y * 0.05) % (this.canvas.width + 80) - 40;
-                const y = this.camera.y + (i * 120) + Math.sin(this.camera.y * 0.008 + i) * 30;
+            for (let i = 0; i < 4; i++) {  // Daha az bulut
+                const x = (i * 100 + this.camera.y * 0.02) % (this.canvas.width + 50) - 25;
+                const y = this.camera.y + (i * 150);
                 
                 this.ctx.beginPath();
-                this.ctx.arc(x, y, 10, 0, Math.PI * 2);
-                this.ctx.arc(x + 10, y, 14, 0, Math.PI * 2);
-                this.ctx.arc(x + 20, y, 10, 0, Math.PI * 2);
-                this.ctx.arc(x + 10, y - 6, 10, 0, Math.PI * 2);
+                this.ctx.arc(x, y, 8, 0, Math.PI * 2);
+                this.ctx.arc(x + 8, y, 12, 0, Math.PI * 2);
+                this.ctx.arc(x + 16, y, 8, 0, Math.PI * 2);
                 this.ctx.fill();
-            }
-            
-            // Yıldız efekti - daha az yıldız
-            if (this.score > 100) {
-                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-                for (let i = 0; i < 4; i++) {  // 8'den 4'e düşür
-                    const x = (i * 120 + this.camera.y * 0.02) % this.canvas.width;
-                    const y = this.camera.y + (i * 160) + Math.sin(this.camera.y * 0.01 + i) * 20;
-                    
-                    this.drawStar(x, y, 3, 2, 5);
-                }
             }
         }
     }
@@ -483,16 +479,13 @@ class Game {
     
     gameLoop(currentTime) {
         const deltaTime = currentTime - this.lastTime;
-        this.lastTime = currentTime;
         
-        // FPS sınırlama - 60 FPS için 16.67ms bekle
-        if (deltaTime < 16.67) {
-            requestAnimationFrame((time) => this.gameLoop(time));
-            return;
+        // FPS sınırlama - 60 FPS için minimum 16.67ms bekle
+        if (deltaTime >= 16.67) {
+            this.lastTime = currentTime;
+            this.update();
+            this.render();
         }
-        
-        this.update();
-        this.render();
         
         requestAnimationFrame((time) => this.gameLoop(time));
     }
