@@ -7,10 +7,10 @@ class Player {
         this.velocityX = 0;
         this.velocityY = 0;
         this.speed = 5;
-        this.jumpPower = -12;
+        this.jumpPower = -15; // Artırıldı (eski: -12)
         this.gravity = 0.4;
         this.maxFallSpeed = 15;
-        this.direction = 1; // 1 = sağ, -1 = sol
+        this.direction = 1;
         this.onGround = false;
     }
     
@@ -18,7 +18,7 @@ class Player {
         // Yatay hareket
         this.x += this.velocityX;
         
-        // Ekran sınırları - karakteri diğer taraftan çıkar
+        // Ekran sınırları - wrap around
         if (this.x + this.width < 0) {
             this.x = canvas.width;
         } else if (this.x > canvas.width) {
@@ -62,7 +62,6 @@ class Player {
     draw(ctx) {
         ctx.save();
         
-        // Karakteri çiz (basit doodle tarzı)
         const centerX = this.x + this.width / 2;
         const centerY = this.y + this.height / 2;
         
@@ -92,13 +91,14 @@ class Player {
         
         // Bacaklar
         ctx.fillStyle = '#e67e22';
-        ctx.fillRect(this.x + 6, this.y + this.height - 8, 3, 8);
-        ctx.fillRect(this.x + this.width - 9, this.y + this.height - 8, 3, 8);
-        
-        // Zıplama animasyonu - yukarı giderken bacakları büz
         if (this.velocityY < 0) {
+            // Yukarı zıplarken bacakları büz
             ctx.fillRect(this.x + 6, this.y + this.height - 5, 3, 5);
             ctx.fillRect(this.x + this.width - 9, this.y + this.height - 5, 3, 5);
+        } else {
+            // Normal bacaklar
+            ctx.fillRect(this.x + 6, this.y + this.height - 8, 3, 8);
+            ctx.fillRect(this.x + this.width - 9, this.y + this.height - 8, 3, 8);
         }
         
         ctx.restore();
@@ -107,9 +107,9 @@ class Player {
     getCollisionBox() {
         return {
             x: this.x + 2,
-            y: this.y + this.height - 5,
+            y: this.y + this.height - 8, // Biraz daha yüksek çarpışma kutusu
             width: this.width - 4,
-            height: 5
+            height: 8
         };
     }
 }
