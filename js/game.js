@@ -89,111 +89,31 @@ class Game {
             this.startGame();
         });
         
-        // Geliştirilmiş mobil kontroller - butonlar
+        // Basit mobil kontroller - sadece temel eventler
         const leftBtn = document.getElementById('leftBtn');
         const rightBtn = document.getElementById('rightBtn');
         
-        this.setupButtonControls(leftBtn, 'ArrowLeft');
-        this.setupButtonControls(rightBtn, 'ArrowRight');
+        if (leftBtn) {
+            leftBtn.addEventListener('touchstart', () => {
+                this.keys['ArrowLeft'] = true;
+            });
+            leftBtn.addEventListener('touchend', () => {
+                this.keys['ArrowLeft'] = false;
+            });
+        }
         
-        // Tam ekran mobil kontroller
-        const leftArea = document.getElementById('leftArea');
-        const rightArea = document.getElementById('rightArea');
+        if (rightBtn) {
+            rightBtn.addEventListener('touchstart', () => {
+                this.keys['ArrowRight'] = true;
+            });
+            rightBtn.addEventListener('touchend', () => {
+                this.keys['ArrowRight'] = false;
+            });
+        }
         
-        this.setupTouchArea(leftArea, 'ArrowLeft');
-        this.setupTouchArea(rightArea, 'ArrowRight');
-        
-        // Touch eventlerini optimize et
-        document.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-        }, { passive: false });
-        
-        document.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-        }, { passive: false });
-        
+        // Canvas boyutlandırma
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
-    }
-    
-    setupButtonControls(button, key) {
-        // Touch events
-        button.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            this.keys[key] = true;
-            button.classList.add('touching');
-            this.addTouchFeedback(button);
-        });
-        
-        button.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            this.keys[key] = false;
-            button.classList.remove('touching');
-        });
-        
-        button.addEventListener('touchcancel', (e) => {
-            e.preventDefault();
-            this.keys[key] = false;
-            button.classList.remove('touching');
-        });
-        
-        // Mouse events
-        button.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            this.keys[key] = true;
-            button.classList.add('touching');
-        });
-        
-        button.addEventListener('mouseup', (e) => {
-            e.preventDefault();
-            this.keys[key] = false;
-            button.classList.remove('touching');
-        });
-        
-        button.addEventListener('mouseleave', (e) => {
-            this.keys[key] = false;
-            button.classList.remove('touching');
-        });
-    }
-    
-    setupTouchArea(area, key) {
-        // Touch events
-        area.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            this.keys[key] = true;
-            area.classList.add('active');
-            this.addTouchFeedback();
-        });
-        
-        area.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            this.keys[key] = false;
-            area.classList.remove('active');
-        });
-        
-        area.addEventListener('touchcancel', (e) => {
-            e.preventDefault();
-            this.keys[key] = false;
-            area.classList.remove('active');
-        });
-        
-        // Mouse events (desktop test için)
-        area.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            this.keys[key] = true;
-            area.classList.add('active');
-        });
-        
-        area.addEventListener('mouseup', (e) => {
-            e.preventDefault();
-            this.keys[key] = false;
-            area.classList.remove('active');
-        });
-        
-        area.addEventListener('mouseleave', (e) => {
-            this.keys[key] = false;
-            area.classList.remove('active');
-        });
     }
     
     addTouchFeedback(button = null) {
@@ -422,10 +342,12 @@ class Game {
         this.ctx.restore();
     }
     
-    gameLoop(currentTime) {
-        this.update();
+    gameLoop() {
+        if (this.gameState === 'playing') {
+            this.update();
+        }
         this.render();
-        requestAnimationFrame((time) => this.gameLoop(time));
+        requestAnimationFrame(() => this.gameLoop());
     }
 }
 
