@@ -335,6 +335,13 @@ body {
         margin-bottom: 10px;
     }
     
+    .mobile-super-jump {
+        display: block !important; /* Mobilde göster */
+        top: 120px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+    }
+    
     .mobile-controls {
         display: flex !important; /* Mobilde göster */
         position: fixed !important;
@@ -343,20 +350,23 @@ body {
         right: 10px !important;
         width: auto !important;
         margin: 0 !important;
+        justify-content: space-between !important; /* Sağ sola yerleştir */
+        align-items: center !important;
+        gap: 0 !important;
     }
     
     .arrow-btn {
-        width: 70px;
-        height: 70px;
-        font-size: 24px;
+        width: 80px;
+        height: 80px;
+        font-size: 28px;
         background: linear-gradient(145deg, #667eea, #764ba2);
         box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
     }
     
     .super-jump-btn {
-        width: 80px;
-        height: 80px;
-        font-size: 30px;
+        width: 75px;
+        height: 75px;
+        font-size: 28px;
         margin: 0;
         background: linear-gradient(145deg, #f39c12, #e74c3c);
         box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
@@ -398,21 +408,26 @@ body {
     }
     
     .arrow-btn {
-        width: 65px;
-        height: 65px;
-        font-size: 22px;
+        width: 70px;
+        height: 70px;
+        font-size: 24px;
     }
     
     .super-jump-btn {
-        width: 75px;
-        height: 75px;
-        font-size: 28px;
+        width: 65px;
+        height: 65px;
+        font-size: 26px;
+    }
+    
+    .mobile-super-jump {
+        top: 100px !important;
     }
     
     .mobile-controls {
-        gap: 15px;
+        gap: 0;
         padding: 8px 0;
         margin: 0 5px;
+        bottom: 8px !important;
     }
     
     .super-jump-bar {
@@ -428,20 +443,25 @@ body {
 /* Çok küçük ekranlar için */
 @media (max-width: 360px) {
     .arrow-btn {
-        width: 60px;
-        height: 60px;
-        font-size: 20px;
+        width: 65px;
+        height: 65px;
+        font-size: 22px;
     }
     
     .super-jump-btn {
-        width: 70px;
-        height: 70px;
-        font-size: 26px;
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+    
+    .mobile-super-jump {
+        top: 90px !important;
     }
     
     .mobile-controls {
-        gap: 12px;
+        gap: 0;
         padding: 6px 0;
+        bottom: 6px !important;
     }
     
     .score, .high-score {
@@ -517,4 +537,20 @@ body {
 
 #restartBtn:active, #startBtn:active {
     transform: translateY(0);
+}
+
+.mobile-super-jump {
+    display: none; /* Desktop'ta gizli */
+    position: fixed;
+    top: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+}
+
+.mobile-super-jump .super-jump-btn {
+    width: 70px;
+    height: 70px;
+    font-size: 28px;
+    margin: 0;
 }
