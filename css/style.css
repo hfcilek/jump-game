@@ -720,20 +720,45 @@ body {
 
 /* Karakter Mağazası Stilleri */
 .character-shop {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    opacity: 1;
+    visibility: visible;
+    transition: all 0.3s ease;
+}
+
+.character-shop.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.shop-content {
     background: rgba(255, 255, 255, 0.95);
     padding: 30px;
     border-radius: 25px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-    z-index: 200;
-    backdrop-filter: blur(15px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     border: 3px solid rgba(255, 255, 255, 0.3);
     max-width: 600px;
     max-height: 80vh;
     overflow-y: auto;
+    width: 90%;
+    backdrop-filter: blur(15px);
+    transform: scale(1);
+    transition: transform 0.3s ease;
+}
+
+.character-shop.hidden .shop-content {
+    transform: scale(0.9);
 }
 
 .shop-header {

@@ -40,7 +40,10 @@ class Game {
     
     showCharacterShop() {
         this.gameState = 'shop';
-        document.getElementById('characterShop').classList.remove('hidden');
+        const shopElement = document.getElementById('characterShop');
+        if (shopElement) {
+            shopElement.classList.remove('hidden');
+        }
         document.getElementById('mainMenu').classList.add('hidden');
         this.updateShopUI();
     }
@@ -199,12 +202,13 @@ class Game {
             this.showMainMenu();
         });
         
-        // Karakter mağazası
-        document.querySelectorAll('.character-card').forEach(card => {
-            card.addEventListener('click', () => {
+        // Karakter mağazası - Event delegation kullan
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.character-card')) {
+                const card = e.target.closest('.character-card');
                 const characterType = card.dataset.character;
                 this.handleCharacterSelection(characterType);
-            });
+            }
         });
         
         // İyileştirilmiş mobil kontroller
@@ -291,6 +295,13 @@ class Game {
         // Canvas boyutlandırma
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
+        
+        // Modal dışına tıklandığında kapat
+        document.getElementById('characterShop').addEventListener('click', (e) => {
+            if (e.target.id === 'characterShop') {
+                this.showMainMenu();
+            }
+        });
     }
     
     addTouchFeedback(button = null) {
