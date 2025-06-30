@@ -23,28 +23,24 @@ class Game {
         // İlk platform (başlangıç)
         this.platforms.push(new Platform(150, 550, 'normal'));
         
-        // Başlangıçta daha kolay platformlar
-        for (let i = 0; i < 60; i++) {
+        // Daha az platform ve daha kolay mesafeler
+        for (let i = 0; i < 30; i++) { // 60'tan 30'a düşürdük
             const x = Utils.getRandomFloat(20, this.canvas.width - 100);
             
-            // Progresif zorluk - başta kolay, sonra zorlaşır
+            // Daha kolay mesafeler
             let minGap, maxGap;
-            if (i < 10) {
-                // İlk 10 platform çok kolay
-                minGap = 45;
-                maxGap = 65;
+            if (i < 15) {
+                // İlk 15 platform çok kolay
+                minGap = 35; // 45'ten 35'e
+                maxGap = 50; // 65'ten 50'ye
             } else if (i < 25) {
-                // Sonraki 15 platform orta seviye
-                minGap = 55;
-                maxGap = 75;
-            } else if (i < 40) {
-                // Sonraki 15 platform biraz zor
-                minGap = 65;
-                maxGap = 85;
+                // Sonraki 10 platform orta seviye
+                minGap = 45; // 55'ten 45'e
+                maxGap = 60; // 75'ten 60'a
             } else {
-                // Geri kalan platformlar normal zorluk
-                minGap = 70;
-                maxGap = 95;
+                // Son 5 platform biraz daha zor
+                minGap = 55; // 70'ten 55'e
+                maxGap = 70; // 95'ten 70'e
             }
             
             const y = 500 - (i * Utils.getRandomFloat(minGap, maxGap));
@@ -52,11 +48,11 @@ class Game {
             let type = 'normal';
             const rand = Math.random();
             
-            // Başlangıçta özel platform oranını azalt
-            if (i > 5) { // İlk 5 platform sadece normal
-                if (rand < 0.08) type = 'bouncy';
-                else if (rand < 0.12) type = 'breakable';
-                else if (rand < 0.18) type = 'moving';
+            // Özel platform oranını daha da azalt
+            if (i > 8) { // İlk 8 platform sadece normal
+                if (rand < 0.05) type = 'bouncy';     // 0.08'den 0.05'e
+                else if (rand < 0.08) type = 'breakable'; // 0.12'den 0.08'e
+                else if (rand < 0.12) type = 'moving';    // 0.18'den 0.12'ye
             }
             
             this.platforms.push(new Platform(x, y, type));
@@ -232,17 +228,18 @@ class Game {
         
         let highestY = Math.min(...this.platforms.map(p => p.y));
         
-        // Basit platform üretimi
-        while (highestY > this.camera.y - 1000) {
+        // Basit platform üretimi - daha kolay mesafeler
+        while (highestY > this.camera.y - 800) { // 1000'den 800'e
             const x = Utils.getRandomFloat(20, this.canvas.width - 100);
-            highestY -= Utils.getRandomFloat(60, 90);
+            highestY -= Utils.getRandomFloat(40, 65); // 60-90'dan 40-65'e
             
             let type = 'normal';
             const rand = Math.random();
             
-            if (rand < 0.1) type = 'bouncy';
-            else if (rand < 0.2) type = 'breakable';
-            else if (rand < 0.3) type = 'moving';
+            // Daha az özel platform
+            if (rand < 0.05) type = 'bouncy';     // 0.1'den 0.05'e
+            else if (rand < 0.1) type = 'breakable'; // 0.2'den 0.1'e
+            else if (rand < 0.15) type = 'moving';    // 0.3'den 0.15'e
             
             this.platforms.push(new Platform(x, highestY, type));
         }
