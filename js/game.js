@@ -11,13 +11,12 @@ class Game {
         this.gameState = 'start';
         
         this.keys = {};
-        this.lastTime = 0;
         
         this.initializePlatforms();
         this.setupEventListeners();
         this.updateUI();
         
-        this.gameLoop(0);
+        this.gameLoop();
     }
     
     initializePlatforms() {
@@ -255,35 +254,20 @@ class Game {
     update() {
         if (this.gameState !== 'playing') return;
         
-        try {
-            this.handleInput();
-            this.player.update(this.canvas);
-            
-            // Platform güncelleme - sadece yakındakileri
-            const nearbyPlatforms = this.platforms.filter(platform => 
-                Math.abs(platform.y - this.player.y) < 200
-            );
-            
-            nearbyPlatforms.forEach(platform => {
-                platform.update(this.canvas);
-            });
-            
-            this.checkCollisions();
-            this.updateCamera();
-            
-            // Platform üretimini her 10 frame'de bir yap
-            if (Math.floor(Date.now() / 100) % 10 === 0) {
-                this.generatePlatforms();
-            }
-            
-            this.updateScore();
-            this.checkGameOver();
-            this.updateUI();
-        } catch (error) {
-            console.error('Game update error:', error);
-            // Hata durumunda oyunu durdur
-            this.gameState = 'gameOver';
-        }
+        this.handleInput();
+        this.player.update(this.canvas);
+        
+        // Tüm platformları güncelle
+        this.platforms.forEach(platform => {
+            platform.update(this.canvas);
+        });
+        
+        this.checkCollisions();
+        this.updateCamera();
+        this.generatePlatforms();
+        this.updateScore();
+        this.checkGameOver();
+        this.updateUI();
     }
     
     checkCollisions() {
@@ -324,35 +308,28 @@ class Game {
     }
     
     generatePlatforms() {
-        // Platform üretimi sadece gerektiğinde yap
-        if (this.platforms.length === 0) return; // Güvenlik kontrolü
+        if (this.platforms.length === 0) return;
         
-        const highestPlatformY = Math.min(...this.platforms.map(p => p.y || 0));
-        const targetY = this.camera.y - 800;
+        let highestY = Math.min(...this.platforms.map(p => p.y));
         
-        if (highestPlatformY > targetY) {
-            // Güvenli platform üretimi
-            const platformsToGenerate = Math.min(10, Math.floor((highestPlatformY - targetY) / 70));
+        // Basit platform üretimi
+        while (highestY > this.camera.y - 1000) {
+            const x = Utils.getRandomFloat(20, this.canvas.width - 100);
+            highestY -= Utils.getRandomFloat(60, 90);
             
-            for (let i = 0; i < platformsToGenerate; i++) {
-                const x = Utils.getRandomFloat(20, this.canvas.width - 100);
-                const y = highestPlatformY - ((i + 1) * Utils.getRandomFloat(60, 90));
-                
-                let type = 'normal';
-                const rand = Math.random();
-                
-                if (rand < 0.08) type = 'bouncy';
-                else if (rand < 0.15) type = 'breakable';
-                else if (rand < 0.22) type = 'moving';
-                
-                this.platforms.push(new Platform(x, y, type));
-            }
+            let type = 'normal';
+            const rand = Math.random();
+            
+            if (rand < 0.1) type = 'bouncy';
+            else if (rand < 0.2) type = 'breakable';
+            else if (rand < 0.3) type = 'moving';
+            
+            this.platforms.push(new Platform(x, highestY, type));
         }
         
-        // Görünmeyen platformları temizle - performans için önemli
-        const cleanupThreshold = this.camera.y + this.canvas.height + 300;
+        // Gereksiz platformları temizle
         this.platforms = this.platforms.filter(platform => 
-            platform && platform.y < cleanupThreshold
+            platform.y < this.camera.y + this.canvas.height + 200
         );
     }
     
@@ -392,66 +369,34 @@ class Game {
     }
     
     render() {
-        try {
-            // Canvas'ı temizle
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            
-            this.ctx.save();
-            this.ctx.translate(0, -this.camera.y);
-            
-            // Arka planı çiz
-            this.drawBackground();
-            
-            // Sadece görünür alandaki platformları çiz
-            const visiblePlatforms = this.platforms.filter(platform => 
-                platform && 
-                platform.y > this.camera.y - 100 && 
-                platform.y < this.camera.y + this.canvas.height + 100
-            );
-            
-            visiblePlatforms.forEach(platform => {
-                if (platform && platform.draw) {
-                    platform.draw(this.ctx);
-                }
-            });
-            
-            // Oyuncuyu çiz
-            if (this.player && this.player.draw) {
-                this.player.draw(this.ctx);
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        this.ctx.save();
+        this.ctx.translate(0, -this.camera.y);
+        
+        this.drawBackground();
+        
+        // Tüm platformları çiz
+        this.platforms.forEach(platform => {
+            if (platform.y > this.camera.y - 50 && 
+                platform.y < this.camera.y + this.canvas.height + 50) {
+                platform.draw(this.ctx);
             }
-            
-            this.ctx.restore();
-        } catch (error) {
-            console.error('Render error:', error);
-        }
+        });
+        
+        this.player.draw(this.ctx);
+        
+        this.ctx.restore();
     }
     
     drawBackground() {
-        // Gradient arka plan
+        // Basit gradient arka plan
         const gradient = this.ctx.createLinearGradient(0, this.camera.y, 0, this.camera.y + this.canvas.height);
-        gradient.addColorStop(0, 'rgba(135, 206, 235, 0.1)');
-        gradient.addColorStop(0.5, 'rgba(224, 246, 255, 0.1)');
-        gradient.addColorStop(1, 'rgba(135, 206, 235, 0.1)');
+        gradient.addColorStop(0, '#87CEEB');
+        gradient.addColorStop(1, '#E0F6FF');
         
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, this.camera.y, this.canvas.width, this.canvas.height);
-        
-        // Performans için efektleri her 10 frame'de bir çiz
-        if (Date.now() % 200 < 50) {  // Her 200ms'de 50ms süreyle
-            // Basit bulut efekti
-            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-            
-            for (let i = 0; i < 4; i++) {  // Daha az bulut
-                const x = (i * 100 + this.camera.y * 0.02) % (this.canvas.width + 50) - 25;
-                const y = this.camera.y + (i * 150);
-                
-                this.ctx.beginPath();
-                this.ctx.arc(x, y, 8, 0, Math.PI * 2);
-                this.ctx.arc(x + 8, y, 12, 0, Math.PI * 2);
-                this.ctx.arc(x + 16, y, 8, 0, Math.PI * 2);
-                this.ctx.fill();
-            }
-        }
     }
     
     drawStar(x, y, outerRadius, innerRadius, points) {
@@ -478,15 +423,8 @@ class Game {
     }
     
     gameLoop(currentTime) {
-        const deltaTime = currentTime - this.lastTime;
-        
-        // FPS sınırlama - 60 FPS için minimum 16.67ms bekle
-        if (deltaTime >= 16.67) {
-            this.lastTime = currentTime;
-            this.update();
-            this.render();
-        }
-        
+        this.update();
+        this.render();
         requestAnimationFrame((time) => this.gameLoop(time));
     }
 }
