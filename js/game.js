@@ -90,101 +90,126 @@ class Game {
             this.startGame();
         });
         
-        // Geliştirilmiş mobil kontroller
+        // Geliştirilmiş mobil kontroller - butonlar
         const leftBtn = document.getElementById('leftBtn');
         const rightBtn = document.getElementById('rightBtn');
         
-        // Sol buton kontrolleri
-        leftBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            this.keys['ArrowLeft'] = true;
-            leftBtn.classList.add('touching');
-            this.addTouchFeedback(leftBtn);
-        });
+        this.setupButtonControls(leftBtn, 'ArrowLeft');
+        this.setupButtonControls(rightBtn, 'ArrowRight');
         
-        leftBtn.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            this.keys['ArrowLeft'] = false;
-            leftBtn.classList.remove('touching');
-        });
+        // Tam ekran mobil kontroller
+        const leftArea = document.getElementById('leftArea');
+        const rightArea = document.getElementById('rightArea');
         
-        leftBtn.addEventListener('touchcancel', (e) => {
-            e.preventDefault();
-            this.keys['ArrowLeft'] = false;
-            leftBtn.classList.remove('touching');
-        });
+        this.setupTouchArea(leftArea, 'ArrowLeft');
+        this.setupTouchArea(rightArea, 'ArrowRight');
         
-        // Sağ buton kontrolleri
-        rightBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            this.keys['ArrowRight'] = true;
-            rightBtn.classList.add('touching');
-            this.addTouchFeedback(rightBtn);
-        });
-        
-        rightBtn.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            this.keys['ArrowRight'] = false;
-            rightBtn.classList.remove('touching');
-        });
-        
-        rightBtn.addEventListener('touchcancel', (e) => {
-            e.preventDefault();
-            this.keys['ArrowRight'] = false;
-            rightBtn.classList.remove('touching');
-        });
-        
-        // Mouse kontrolleri
-        leftBtn.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            this.keys['ArrowLeft'] = true;
-            leftBtn.classList.add('touching');
-        });
-        
-        leftBtn.addEventListener('mouseup', (e) => {
-            e.preventDefault();
-            this.keys['ArrowLeft'] = false;
-            leftBtn.classList.remove('touching');
-        });
-        
-        rightBtn.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            this.keys['ArrowRight'] = true;
-            rightBtn.classList.add('touching');
-        });
-        
-        rightBtn.addEventListener('mouseup', (e) => {
-            e.preventDefault();
-            this.keys['ArrowRight'] = false;
-            rightBtn.classList.remove('touching');
-        });
-        
-        // Touch eventlerini engelle
+        // Touch eventlerini optimize et
         document.addEventListener('touchstart', (e) => {
-            if (e.target.classList.contains('mobile-btn')) {
-                e.preventDefault();
-            }
+            e.preventDefault();
         }, { passive: false });
         
         document.addEventListener('touchmove', (e) => {
-            if (e.target.classList.contains('mobile-btn')) {
-                e.preventDefault();
-            }
+            e.preventDefault();
         }, { passive: false });
         
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
     }
     
-    addTouchFeedback(button) {
+    setupButtonControls(button, key) {
+        // Touch events
+        button.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.keys[key] = true;
+            button.classList.add('touching');
+            this.addTouchFeedback(button);
+        });
+        
+        button.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.keys[key] = false;
+            button.classList.remove('touching');
+        });
+        
+        button.addEventListener('touchcancel', (e) => {
+            e.preventDefault();
+            this.keys[key] = false;
+            button.classList.remove('touching');
+        });
+        
+        // Mouse events
+        button.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            this.keys[key] = true;
+            button.classList.add('touching');
+        });
+        
+        button.addEventListener('mouseup', (e) => {
+            e.preventDefault();
+            this.keys[key] = false;
+            button.classList.remove('touching');
+        });
+        
+        button.addEventListener('mouseleave', (e) => {
+            this.keys[key] = false;
+            button.classList.remove('touching');
+        });
+    }
+    
+    setupTouchArea(area, key) {
+        // Touch events
+        area.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.keys[key] = true;
+            area.classList.add('active');
+            this.addTouchFeedback();
+        });
+        
+        area.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.keys[key] = false;
+            area.classList.remove('active');
+        });
+        
+        area.addEventListener('touchcancel', (e) => {
+            e.preventDefault();
+            this.keys[key] = false;
+            area.classList.remove('active');
+        });
+        
+        // Mouse events (desktop test için)
+        area.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            this.keys[key] = true;
+            area.classList.add('active');
+        });
+        
+        area.addEventListener('mouseup', (e) => {
+            e.preventDefault();
+            this.keys[key] = false;
+            area.classList.remove('active');
+        });
+        
+        area.addEventListener('mouseleave', (e) => {
+            this.keys[key] = false;
+            area.classList.remove('active');
+        });
+    }
+    
+    addTouchFeedback(button = null) {
+        // Titreşim feedback'i
         if (navigator.vibrate) {
-            navigator.vibrate(50);
+            navigator.vibrate(30);
         }
         
-        button.style.transform = 'scale(0.95)';
-        setTimeout(() => {
-            button.style.transform = '';
-        }, 100);
+        // Button için görsel feedback
+        if (button) {
+            button.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                button.style.transform = '';
+            }, 100);
+        }
     }
     
     resizeCanvas() {
@@ -248,9 +273,14 @@ class Game {
     checkCollisions() {
         const playerBox = this.player.getCollisionBox();
         
-        this.platforms.forEach(platform => {
-            if (platform.broken) return;
-            
+        // Sadece oyuncuya yakın platformları kontrol et
+        const nearbyPlatforms = this.platforms.filter(platform => 
+            !platform.broken &&
+            Math.abs(platform.y - this.player.y) < 50 &&
+            Math.abs(platform.x - this.player.x) < 150
+        );
+        
+        nearbyPlatforms.forEach(platform => {
             const platformBox = {
                 x: platform.x,
                 y: platform.y,
@@ -258,10 +288,10 @@ class Game {
                 height: platform.height
             };
             
-            // İyileştirilmiş çarpışma tespiti
+            // İyileştirilmiş çarpışma tespiti - sadece aşağı düşerken
             if (this.player.velocityY > 0 && 
                 Utils.checkCollision(playerBox, platformBox) &&
-                this.player.y + this.player.height - 10 < platform.y) {
+                this.player.y + this.player.height - 15 < platform.y) {
                 
                 platform.onPlayerLand(this.player);
                 this.player.jump();
@@ -278,47 +308,52 @@ class Game {
     }
     
     generatePlatforms() {
-        let highestY = Math.min(...this.platforms.map(p => p.y));
+        // Platform üretimi sadece gerektiğinde yap
+        const highestPlatformY = Math.min(...this.platforms.map(p => p.y));
+        const targetY = this.camera.y - 800;
         
-        while (highestY > this.camera.y - 1000) {
-            const x = Utils.getRandomFloat(20, this.canvas.width - 100);
+        if (highestPlatformY > targetY) {
+            // Toplu platform üretimi - performans için
+            const platformsToGenerate = Math.floor((highestPlatformY - targetY) / 70);
             
-            // Mevcut yüksekliğe göre zorluk ayarla
-            const currentHeight = Math.abs(highestY);
-            let minGap, maxGap;
-            
-            if (currentHeight < 1000) {
-                // İlk 1000 piksel - kolay
-                minGap = 50;
-                maxGap = 70;
-            } else if (currentHeight < 2500) {
-                // 1000-2500 piksel - orta
-                minGap = 60;
-                maxGap = 80;
-            } else if (currentHeight < 5000) {
-                // 2500-5000 piksel - zor
-                minGap = 70;
-                maxGap = 90;
-            } else {
-                // 5000+ piksel - çok zor
-                minGap = 75;
-                maxGap = 100;
+            for (let i = 0; i < platformsToGenerate; i++) {
+                const x = Utils.getRandomFloat(20, this.canvas.width - 100);
+                
+                // Mevcut yüksekliğe göre zorluk ayarla
+                const currentHeight = Math.abs(highestPlatformY - (i * 70));
+                let minGap, maxGap;
+                
+                if (currentHeight < 1000) {
+                    minGap = 50;
+                    maxGap = 70;
+                } else if (currentHeight < 2500) {
+                    minGap = 60;
+                    maxGap = 80;
+                } else if (currentHeight < 5000) {
+                    minGap = 70;
+                    maxGap = 90;
+                } else {
+                    minGap = 75;
+                    maxGap = 100;
+                }
+                
+                const y = highestPlatformY - (i + 1) * Utils.getRandomFloat(minGap, maxGap);
+                
+                let type = 'normal';
+                const rand = Math.random();
+                
+                if (rand < 0.08) type = 'bouncy';
+                else if (rand < 0.15) type = 'breakable';
+                else if (rand < 0.22) type = 'moving';
+                
+                this.platforms.push(new Platform(x, y, type));
             }
-            
-            highestY -= Utils.getRandomFloat(minGap, maxGap);
-            
-            let type = 'normal';
-            const rand = Math.random();
-            
-            if (rand < 0.08) type = 'bouncy';
-            else if (rand < 0.15) type = 'breakable';
-            else if (rand < 0.22) type = 'moving';
-            
-            this.platforms.push(new Platform(x, highestY, type));
         }
         
+        // Görünmeyen platformları temizle - performans için önemli
+        const cleanupThreshold = this.camera.y + this.canvas.height + 300;
         this.platforms = this.platforms.filter(platform => 
-            platform.y < this.camera.y + this.canvas.height + 200
+            platform.y < cleanupThreshold
         );
     }
     
@@ -358,26 +393,33 @@ class Game {
     }
     
     render() {
+        // Canvas'ı temizle
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
         this.ctx.save();
         this.ctx.translate(0, -this.camera.y);
         
+        // Arka planı çiz
         this.drawBackground();
         
-        this.platforms.forEach(platform => {
-            if (platform.y > this.camera.y - 50 && 
-                platform.y < this.camera.y + this.canvas.height + 50) {
-                platform.draw(this.ctx);
-            }
+        // Sadece görünür alandaki platformları çiz
+        const visiblePlatforms = this.platforms.filter(platform => 
+            platform.y > this.camera.y - 100 && 
+            platform.y < this.camera.y + this.canvas.height + 100
+        );
+        
+        visiblePlatforms.forEach(platform => {
+            platform.draw(this.ctx);
         });
         
+        // Oyuncuyu çiz
         this.player.draw(this.ctx);
         
         this.ctx.restore();
     }
     
     drawBackground() {
+        // Gradient arka plan
         const gradient = this.ctx.createLinearGradient(0, this.camera.y, 0, this.camera.y + this.canvas.height);
         gradient.addColorStop(0, 'rgba(135, 206, 235, 0.1)');
         gradient.addColorStop(0.5, 'rgba(224, 246, 255, 0.1)');
@@ -386,29 +428,32 @@ class Game {
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, this.camera.y, this.canvas.width, this.canvas.height);
         
-        // Bulut efekti
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-        
-        for (let i = 0; i < 15; i++) {
-            const x = (i * 60 + this.camera.y * 0.05) % (this.canvas.width + 80) - 40;
-            const y = this.camera.y + (i * 80) + Math.sin(this.camera.y * 0.008 + i) * 30;
+        // Performans için efektleri azalt
+        if (this.score % 5 === 0) {  // Her 5 frame'de bir çiz
+            // Bulut efekti - sayıyı azalt
+            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
             
-            this.ctx.beginPath();
-            this.ctx.arc(x, y, 12, 0, Math.PI * 2);
-            this.ctx.arc(x + 12, y, 16, 0, Math.PI * 2);
-            this.ctx.arc(x + 24, y, 12, 0, Math.PI * 2);
-            this.ctx.arc(x + 12, y - 8, 12, 0, Math.PI * 2);
-            this.ctx.fill();
-        }
-        
-        // Yıldız efekti
-        if (this.score > 100) {
-            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            for (let i = 0; i < 8; i++) {
-                const x = (i * 90 + this.camera.y * 0.02) % this.canvas.width;
-                const y = this.camera.y + (i * 120) + Math.sin(this.camera.y * 0.01 + i) * 20;
+            for (let i = 0; i < 8; i++) {  // 15'ten 8'e düşür
+                const x = (i * 80 + this.camera.y * 0.05) % (this.canvas.width + 80) - 40;
+                const y = this.camera.y + (i * 120) + Math.sin(this.camera.y * 0.008 + i) * 30;
                 
-                this.drawStar(x, y, 3, 2, 5);
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, 10, 0, Math.PI * 2);
+                this.ctx.arc(x + 10, y, 14, 0, Math.PI * 2);
+                this.ctx.arc(x + 20, y, 10, 0, Math.PI * 2);
+                this.ctx.arc(x + 10, y - 6, 10, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+            
+            // Yıldız efekti - daha az yıldız
+            if (this.score > 100) {
+                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                for (let i = 0; i < 4; i++) {  // 8'den 4'e düşür
+                    const x = (i * 120 + this.camera.y * 0.02) % this.canvas.width;
+                    const y = this.camera.y + (i * 160) + Math.sin(this.camera.y * 0.01 + i) * 20;
+                    
+                    this.drawStar(x, y, 3, 2, 5);
+                }
             }
         }
     }
@@ -439,6 +484,12 @@ class Game {
     gameLoop(currentTime) {
         const deltaTime = currentTime - this.lastTime;
         this.lastTime = currentTime;
+        
+        // FPS sınırlama - 60 FPS için 16.67ms bekle
+        if (deltaTime < 16.67) {
+            requestAnimationFrame((time) => this.gameLoop(time));
+            return;
+        }
         
         this.update();
         this.render();

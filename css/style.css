@@ -200,6 +200,58 @@ body {
     animation: pulse 0.2s ease-in-out;
 }
 
+/* Tam ekran mobil kontroller */
+.fullscreen-controls {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.touch-area {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50%;
+    pointer-events: all;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+    user-select: none;
+}
+
+.left-area {
+    left: 0;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.right-area {
+    right: 0;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.touch-area.active {
+    background: rgba(102, 126, 234, 0.2) !important;
+}
+
+.touch-indicator {
+    font-size: 48px;
+    color: rgba(255, 255, 255, 0.3);
+    font-weight: bold;
+    transition: all 0.2s ease;
+    pointer-events: none;
+}
+
+.touch-area.active .touch-indicator {
+    color: rgba(255, 255, 255, 0.8);
+    transform: scale(1.2);
+}
+
 @media (max-width: 768px) {
     body {
         padding: 10px;
@@ -220,6 +272,10 @@ body {
     
     .mobile-controls {
         display: flex;
+    }
+    
+    .fullscreen-controls {
+        display: block;
     }
     
     .ui-container {
@@ -263,5 +319,26 @@ body {
     .mobile-controls {
         bottom: -80px;
         padding: 0 25px;
+    }
+    
+    .fullscreen-controls {
+        display: block !important;
+    }
+    
+    .touch-indicator {
+        font-size: 36px;
+    }
+}
+
+/* Çok küçük ekranlar için */
+@media (max-width: 360px) {
+    .touch-indicator {
+        font-size: 32px;
+    }
+    
+    .mobile-btn {
+        width: 55px;
+        height: 55px;
+        font-size: 18px;
     }
 }

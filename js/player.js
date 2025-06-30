@@ -47,11 +47,11 @@ class Player {
     }
     
     moveLeft() {
-        this.velocityX = -this.speed;
+        this.velocityX = Math.max(this.velocityX - 0.8, -this.speed);
     }
     
     moveRight() {
-        this.velocityX = this.speed;
+        this.velocityX = Math.min(this.velocityX + 0.8, this.speed);
     }
     
     jump() {
