@@ -31,4 +31,59 @@ class Utils {
     static getHighScore() {
         return parseInt(localStorage.getItem('doodleJumpHighScore')) || 0;
     }
+    
+    // Karakter sistemi metodları
+    static getSelectedCharacter() {
+        return localStorage.getItem('selectedCharacter') || 'default';
+    }
+    
+    static setSelectedCharacter(character) {
+        localStorage.setItem('selectedCharacter', character);
+    }
+    
+    static getOwnedCharacters() {
+        const owned = localStorage.getItem('ownedCharacters');
+        return owned ? JSON.parse(owned) : ['default'];
+    }
+    
+    static addOwnedCharacter(character) {
+        const owned = this.getOwnedCharacters();
+        if (!owned.includes(character)) {
+            owned.push(character);
+            localStorage.setItem('ownedCharacters', JSON.stringify(owned));
+        }
+    }
+    
+    static getTotalGold() {
+        return parseInt(localStorage.getItem('totalGold')) || 0;
+    }
+    
+    static addGold(amount) {
+        const current = this.getTotalGold();
+        const newTotal = current + amount;
+        localStorage.setItem('totalGold', newTotal);
+        return newTotal;
+    }
+    
+    static spendGold(amount) {
+        const current = this.getTotalGold();
+        if (current >= amount) {
+            const newTotal = current - amount;
+            localStorage.setItem('totalGold', newTotal);
+            return true;
+        }
+        return false;
+    }
+    
+    static getCharacterPrice(character) {
+        const prices = {
+            'default': 0,
+            'red': 50,
+            'blue': 100,
+            'green': 200,
+            'purple': 500,
+            'golden': 1000
+        };
+        return prices[character] || 0;
+    }
 }

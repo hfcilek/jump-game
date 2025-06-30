@@ -10,23 +10,105 @@ class Game {
         this.score = 0;
         this.goldCount = 0; // Gold sayısı
         this.highScore = Utils.getHighScore();
-        this.gameState = 'start';
+        this.gameState = 'menu'; // 'menu', 'start', 'playing', 'gameOver', 'shop'
         
         this.keys = {};
+        
+        // Karakter sistemi
+        this.selectedCharacter = Utils.getSelectedCharacter();
+        this.ownedCharacters = Utils.getOwnedCharacters();
+        this.totalGold = Utils.getTotalGold();
         
         this.initializePlatforms();
         this.setupEventListeners();
         this.updateUI();
         
-        // Start screen'i göster
-        this.showStartScreen();
+        // Ana menüyü göster
+        this.showMainMenu();
         
         this.gameLoop();
     }
     
+    showMainMenu() {
+        this.gameState = 'menu';
+        document.getElementById('mainMenu').classList.remove('hidden');
+        document.getElementById('startScreen').classList.add('hidden');
+        document.getElementById('gameOverScreen').classList.add('hidden');
+        document.getElementById('characterShop').classList.add('hidden');
+        this.updateMenuUI();
+    }
+    
+    showCharacterShop() {
+        this.gameState = 'shop';
+        document.getElementById('characterShop').classList.remove('hidden');
+        document.getElementById('mainMenu').classList.add('hidden');
+        this.updateShopUI();
+    }
+    
+    updateMenuUI() {
+        document.getElementById('menu-gold-count').textContent = this.totalGold;
+        document.getElementById('menu-high-score').textContent = this.highScore;
+        document.getElementById('menu-total-gold').textContent = this.totalGold;
+    }
+    
+    updateShopUI() {
+        document.getElementById('shop-gold-count').textContent = this.totalGold;
+        
+        // Karakter önizlemelerini güncelle
+        this.drawCharacterPreviews();
+        
+        // Karakter kartlarını güncelle
+        const cards = document.querySelectorAll('.character-card');
+        cards.forEach(card => {
+            const characterType = card.dataset.character;
+            const button = card.querySelector('.character-btn');
+            const isOwned = this.ownedCharacters.includes(characterType);
+            const isSelected = this.selectedCharacter === characterType;
+            
+            card.classList.toggle('selected', isSelected);
+            
+            if (isSelected) {
+                button.textContent = 'Seçili';
+                button.className = 'character-btn selected';
+            } else if (isOwned) {
+                button.textContent = 'Seç';
+                button.className = 'character-btn';
+            } else {
+                button.textContent = 'Satın Al';
+                button.className = 'character-btn';
+            }
+        });
+    }
+    
+    drawCharacterPreviews() {
+        const previews = {
+            'default': { body: '#f39c12', head: '#f39c12' },
+            'red': { body: '#e74c3c', head: '#c0392b' },
+            'blue': { body: '#3498db', head: '#2980b9' },
+            'green': { body: '#27ae60', head: '#229954' },
+            'purple': { body: '#9b59b6', head: '#8e44ad' },
+            'golden': { body: '#f1c40f', head: '#f39c12' }
+        };
+        
+        Object.keys(previews).forEach(type => {
+            const preview = document.getElementById(`preview-${type}`);
+            if (preview) {
+                const colors = previews[type];
+                preview.style.background = `linear-gradient(135deg, ${colors.body}, ${colors.head})`;
+                preview.style.border = `3px solid ${colors.head}`;
+                
+                if (type === 'golden') {
+                    preview.style.boxShadow = '0 0 20px rgba(241, 196, 15, 0.6)';
+                }
+            }
+        });
+    }
+    
     showStartScreen() {
+        this.gameState = 'start';
         document.getElementById('startScreen').classList.remove('hidden');
         document.getElementById('gameOverScreen').classList.add('hidden');
+        document.getElementById('mainMenu').classList.add('hidden');
     }
     
     initializePlatforms() {
@@ -100,6 +182,29 @@ class Game {
         
         document.getElementById('restartBtn').addEventListener('click', () => {
             this.startGame();
+        });
+        
+        // Ana menü butonları
+        document.getElementById('playBtn').addEventListener('click', () => {
+            this.gameState = 'start';
+            document.getElementById('mainMenu').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+        });
+        
+        document.getElementById('shopBtn').addEventListener('click', () => {
+            this.showCharacterShop();
+        });
+        
+        document.getElementById('shopBackBtn').addEventListener('click', () => {
+            this.showMainMenu();
+        });
+        
+        // Karakter mağazası
+        document.querySelectorAll('.character-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const characterType = card.dataset.character;
+                this.handleCharacterSelection(characterType);
+            });
         });
         
         // İyileştirilmiş mobil kontroller
@@ -242,7 +347,7 @@ class Game {
         this.goldCount = 0; // Gold sayacını sıfırla
         this.camera.y = 0;
         
-        this.player = new Player(200, 500);
+        this.player = new Player(200, 500, this.selectedCharacter);
         this.platforms = [];
         this.golds = []; // Gold array'ini sıfırla
         this.initializePlatforms();
@@ -250,6 +355,7 @@ class Game {
         this.updateUI();
         document.getElementById('startScreen').classList.add('hidden');
         document.getElementById('gameOverScreen').classList.add('hidden');
+        document.getElementById('mainMenu').classList.add('hidden');
     }
     
     handleInput() {
@@ -415,6 +521,9 @@ class Game {
     
     gameOver() {
         this.gameState = 'gameOver';
+        
+        // Goldları toplam gold'a ekle
+        this.totalGold = Utils.addGold(this.goldCount);
         
         const isNewRecord = Utils.saveHighScore(this.score);
         this.highScore = Utils.getHighScore();
@@ -624,6 +733,33 @@ class Game {
         }
         this.render();
         requestAnimationFrame(() => this.gameLoop());
+    }
+    
+    handleCharacterSelection(characterType) {
+        const isOwned = this.ownedCharacters.includes(characterType);
+        const price = Utils.getCharacterPrice(characterType);
+        
+        if (isOwned) {
+            // Karakteri seç
+            this.selectedCharacter = characterType;
+            Utils.setSelectedCharacter(characterType);
+            this.updateShopUI();
+        } else {
+            // Karakteri satın al
+            if (this.totalGold >= price) {
+                if (Utils.spendGold(price)) {
+                    Utils.addOwnedCharacter(characterType);
+                    this.ownedCharacters = Utils.getOwnedCharacters();
+                    this.totalGold = Utils.getTotalGold();
+                    this.selectedCharacter = characterType;
+                    Utils.setSelectedCharacter(characterType);
+                    this.updateShopUI();
+                    this.updateMenuUI();
+                }
+            } else {
+                alert(`Yeterli altınınız yok! ${price - this.totalGold} daha gold gerekli.`);
+            }
+        }
     }
 }
 
