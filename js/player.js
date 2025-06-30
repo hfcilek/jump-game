@@ -6,11 +6,11 @@ class Player {
         this.height = 30;
         this.velocityX = 0;
         this.velocityY = 0;
-        this.speed = 5;
-        this.jumpPower = -15; // Artırıldı (eski: -12)
-        this.superJumpPower = -25; // Süper jump gücü
-        this.gravity = 0.4;
-        this.maxFallSpeed = 15;
+        this.speed = 3; // Düşürüldü (eski: 5)
+        this.jumpPower = -12; // Düşürüldü (eski: -15)
+        this.superJumpPower = -20; // Düşürüldü (eski: -25)
+        this.gravity = 0.3; // Düşürüldü (eski: 0.4)
+        this.maxFallSpeed = 12; // Düşürüldü (eski: 15)
         this.direction = 1;
         this.onGround = false;
         

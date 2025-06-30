@@ -19,6 +19,11 @@ class Game {
         this.ownedCharacters = Utils.getOwnedCharacters();
         this.totalGold = Utils.getTotalGold();
         
+        // FPS kontrolü için
+        this.lastTime = 0;
+        this.targetFPS = 60;
+        this.frameInterval = 1000 / this.targetFPS;
+        
         this.initializePlatforms();
         this.setupEventListeners();
         this.updateUI();
@@ -31,6 +36,8 @@ class Game {
     
     showMainMenu() {
         this.gameState = 'menu';
+        // Total gold'u yeniden yükle (oyun bittikten sonra artmış olabilir)
+        this.totalGold = Utils.getTotalGold();
         document.getElementById('mainMenu').classList.remove('hidden');
         document.getElementById('startScreen').classList.add('hidden');
         document.getElementById('gameOverScreen').classList.add('hidden');
@@ -40,6 +47,8 @@ class Game {
     
     showCharacterShop() {
         this.gameState = 'shop';
+        // Total gold'u yeniden yükle
+        this.totalGold = Utils.getTotalGold();
         const shopElement = document.getElementById('characterShop');
         if (shopElement) {
             shopElement.classList.remove('hidden');
@@ -122,20 +131,20 @@ class Game {
         for (let i = 0; i < 30; i++) { // 60'tan 30'a düşürdük
             const x = Utils.getRandomFloat(20, this.canvas.width - 100);
             
-            // Daha kolay mesafeler
+            // Daha dengeli mesafeler
             let minGap, maxGap;
             if (i < 15) {
-                // İlk 15 platform çok kolay
-                minGap = 35; // 45'ten 35'e
-                maxGap = 50; // 65'ten 50'ye
+                // İlk 15 platform kolay
+                minGap = 40; // 35'ten 40'a 
+                maxGap = 55; // 50'den 55'e
             } else if (i < 25) {
                 // Sonraki 10 platform orta seviye
-                minGap = 45; // 55'ten 45'e
-                maxGap = 60; // 75'ten 60'a
+                minGap = 50; // 45'ten 50'ye
+                maxGap = 65; // 60'tan 65'e
             } else {
                 // Son 5 platform biraz daha zor
-                minGap = 55; // 70'ten 55'e
-                maxGap = 70; // 95'ten 70'e
+                minGap = 60; // 55'ten 60'a
+                maxGap = 75; // 70'ten 75'e
             }
             
             const y = 500 - (i * Utils.getRandomFloat(minGap, maxGap));
@@ -355,7 +364,7 @@ class Game {
     startGame() {
         this.gameState = 'playing';
         this.score = 0;
-        this.goldCount = 0; // Gold sayacını sıfırla
+        this.goldCount = 0; // Sadece oyun içi gold sayacını sıfırla (total gold korunur)
         this.camera.y = 0;
         
         this.player = new Player(200, 500, this.selectedCharacter);
@@ -738,12 +747,18 @@ class Game {
         this.ctx.restore();
     }
     
-    gameLoop() {
-        if (this.gameState === 'playing') {
-            this.update();
+    gameLoop(currentTime = 0) {
+        const deltaTime = currentTime - this.lastTime;
+        
+        if (deltaTime >= this.frameInterval) {
+            if (this.gameState === 'playing') {
+                this.update();
+            }
+            this.render();
+            this.lastTime = currentTime;
         }
-        this.render();
-        requestAnimationFrame(() => this.gameLoop());
+        
+        requestAnimationFrame((time) => this.gameLoop(time));
     }
     
     handleCharacterSelection(characterType) {
