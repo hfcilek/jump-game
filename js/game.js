@@ -16,7 +16,15 @@ class Game {
         this.setupEventListeners();
         this.updateUI();
         
+        // Start screen'i göster
+        this.showStartScreen();
+        
         this.gameLoop();
+    }
+    
+    showStartScreen() {
+        document.getElementById('startScreen').classList.remove('hidden');
+        document.getElementById('gameOverScreen').classList.add('hidden');
     }
     
     initializePlatforms() {
@@ -293,27 +301,34 @@ class Game {
         
         this.drawBackground();
         
-        // Tüm platformları çiz
-        this.platforms.forEach(platform => {
-            if (platform.y > this.camera.y - 50 && 
-                platform.y < this.camera.y + this.canvas.height + 50) {
-                platform.draw(this.ctx);
-            }
-        });
-        
-        this.player.draw(this.ctx);
+        // Oyun durumuna göre çizim
+        if (this.gameState === 'playing' || this.gameState === 'gameOver') {
+            // Platformları çiz
+            this.platforms.forEach(platform => {
+                if (platform.y > this.camera.y - 50 && 
+                    platform.y < this.camera.y + this.canvas.height + 50) {
+                    platform.draw(this.ctx);
+                }
+            });
+            
+            // Oyuncuyu çiz
+            this.player.draw(this.ctx);
+        } else if (this.gameState === 'start') {
+            // Start ekranında sadece arka planı çiz
+            // Platforms ve player çizmeye gerek yok
+        }
         
         this.ctx.restore();
     }
     
     drawBackground() {
-        // Basit gradient arka plan
-        const gradient = this.ctx.createLinearGradient(0, this.camera.y, 0, this.camera.y + this.canvas.height);
+        // Basit ve güvenilir gradient arka plan
+        const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
         gradient.addColorStop(0, '#87CEEB');
         gradient.addColorStop(1, '#E0F6FF');
         
         this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(0, this.camera.y, this.canvas.width, this.canvas.height);
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
     
     drawStar(x, y, outerRadius, innerRadius, points) {
