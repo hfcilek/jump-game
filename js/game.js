@@ -5,8 +5,10 @@ class Game {
         
         this.player = new Player(200, 500);
         this.platforms = [];
+        this.golds = []; // Gold parçaları
         this.camera = { y: 0 };
         this.score = 0;
+        this.goldCount = 0; // Gold sayısı
         this.highScore = Utils.getHighScore();
         this.gameState = 'start';
         
@@ -64,6 +66,13 @@ class Game {
             }
             
             this.platforms.push(new Platform(x, y, type));
+            
+            // Gold üretimi - her 3-4 platformda bir
+            if (i > 2 && Math.random() < 0.3) {
+                const goldX = Utils.getRandomFloat(30, this.canvas.width - 50);
+                const goldY = y - Utils.getRandomFloat(30, 60);
+                this.golds.push(new Gold(goldX, goldY));
+            }
         }
     }
     
@@ -230,10 +239,12 @@ class Game {
     startGame() {
         this.gameState = 'playing';
         this.score = 0;
+        this.goldCount = 0; // Gold sayacını sıfırla
         this.camera.y = 0;
         
         this.player = new Player(200, 500);
         this.platforms = [];
+        this.golds = []; // Gold array'ini sıfırla
         this.initializePlatforms();
         
         this.updateUI();
@@ -276,7 +287,13 @@ class Game {
             platform.update(this.canvas);
         });
         
+        // Goldları güncelle
+        this.golds.forEach(gold => {
+            gold.update();
+        });
+        
         this.checkCollisions();
+        this.checkGoldCollisions();
         this.updateCamera();
         this.generatePlatforms();
         this.updateScore();
@@ -313,6 +330,29 @@ class Game {
         });
     }
     
+    checkGoldCollisions() {
+        const playerBox = this.player.getCollisionBox();
+        
+        this.golds.forEach(gold => {
+            if (!gold.collected) {
+                const goldBox = gold.getCollisionBox();
+                
+                if (Utils.checkCollision(playerBox, goldBox)) {
+                    gold.collect();
+                    this.goldCount++;
+                    
+                    // Gold toplama efekti - titreşim
+                    if (navigator.vibrate) {
+                        navigator.vibrate(80);
+                    }
+                }
+            }
+        });
+        
+        // Toplanmış goldları temizle
+        this.golds = this.golds.filter(gold => !gold.collected);
+    }
+    
     updateCamera() {
         const targetY = this.player.y - this.canvas.height / 2;
         
@@ -340,11 +380,23 @@ class Game {
             else if (rand < 0.15) type = 'moving';    // 0.3'den 0.15'e
             
             this.platforms.push(new Platform(x, highestY, type));
+            
+            // Gold üretimi - her platformda %25 şans
+            if (Math.random() < 0.25) {
+                const goldX = Utils.getRandomFloat(30, this.canvas.width - 50);
+                const goldY = highestY - Utils.getRandomFloat(25, 50);
+                this.golds.push(new Gold(goldX, goldY));
+            }
         }
         
         // Gereksiz platformları temizle
         this.platforms = this.platforms.filter(platform => 
             platform.y < this.camera.y + this.canvas.height + 200
+        );
+        
+        // Gereksiz goldları temizle
+        this.golds = this.golds.filter(gold => 
+            gold.y < this.camera.y + this.canvas.height + 200
         );
     }
     
@@ -368,6 +420,7 @@ class Game {
         this.highScore = Utils.getHighScore();
         
         document.getElementById('final-score').textContent = this.score;
+        document.getElementById('final-gold').textContent = this.goldCount;
         document.getElementById('final-high-score').textContent = this.highScore;
         document.getElementById('gameOverScreen').classList.remove('hidden');
         
@@ -381,6 +434,7 @@ class Game {
     updateUI() {
         document.getElementById('current-score').textContent = this.score;
         document.getElementById('high-score').textContent = this.highScore;
+        document.getElementById('gold-count').textContent = this.goldCount;
         
         // Süper jump UI'ını güncelle
         this.updateSuperJumpUI();
@@ -433,6 +487,14 @@ class Game {
                 }
             });
             
+            // Goldları çiz
+            this.golds.forEach(gold => {
+                if (gold.y > this.camera.y - 50 && 
+                    gold.y < this.camera.y + this.canvas.height + 50) {
+                    gold.draw(this.ctx);
+                }
+            });
+            
             // Oyuncuyu çiz
             this.player.draw(this.ctx);
         } else if (this.gameState === 'start') {
@@ -444,13 +506,93 @@ class Game {
     }
     
     drawBackground() {
-        // Basit ve güvenilir gradient arka plan
+        // Renkli gradient arka plan
         const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
-        gradient.addColorStop(0, '#87CEEB');
-        gradient.addColorStop(1, '#E0F6FF');
+        
+        // Yüksekliğe göre renk değişimi
+        const height = -this.camera.y;
+        
+        if (height < 500) {
+            // Başlangıç - Mavi tonları
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(0.3, '#98D8E8');
+            gradient.addColorStop(0.6, '#A8E6F0');
+            gradient.addColorStop(1, '#E0F6FF');
+        } else if (height < 1500) {
+            // Orta seviye - Mor/Pembe tonları
+            gradient.addColorStop(0, '#8E44AD');
+            gradient.addColorStop(0.3, '#AF7AC5');
+            gradient.addColorStop(0.6, '#D2B4DE');
+            gradient.addColorStop(1, '#F4ECF7');
+        } else if (height < 3000) {
+            // Yüksek seviye - Turuncu/Sarı tonları
+            gradient.addColorStop(0, '#E67E22');
+            gradient.addColorStop(0.3, '#F39C12');
+            gradient.addColorStop(0.6, '#F7DC6F');
+            gradient.addColorStop(1, '#FCF3CF');
+        } else {
+            // Çok yüksek - Uzay teması
+            gradient.addColorStop(0, '#1B2631');
+            gradient.addColorStop(0.3, '#2E4057');
+            gradient.addColorStop(0.6, '#546E7A');
+            gradient.addColorStop(1, '#78909C');
+        }
         
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Yıldızlar ekle (yüksek seviyede)
+        if (height > 2000) {
+            this.drawStars();
+        }
+        
+        // Bulutlar ekle (düşük seviyede)
+        if (height < 1000) {
+            this.drawClouds();
+        }
+    }
+    
+    drawStars() {
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.globalAlpha = 0.8;
+        
+        // Kamera pozisyonuna göre yıldız konumları
+        const starCount = 15;
+        const baseY = Math.floor(this.camera.y / 200) * 200;
+        
+        for (let i = 0; i < starCount; i++) {
+            const x = (i * 37 + 123) % this.canvas.width;
+            const y = baseY + (i * 43 + 67) % 600;
+            
+            if (y > this.camera.y - 50 && y < this.camera.y + this.canvas.height + 50) {
+                this.drawStar(x, y, 2, 1, 4);
+            }
+        }
+        
+        this.ctx.globalAlpha = 1;
+    }
+    
+    drawClouds() {
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        
+        // Kamera pozisyonuna göre bulut konumları
+        const cloudCount = 8;
+        const baseY = Math.floor(this.camera.y / 150) * 150;
+        
+        for (let i = 0; i < cloudCount; i++) {
+            const x = (i * 67 + 45) % (this.canvas.width + 100) - 50;
+            const y = baseY + (i * 89 + 234) % 450;
+            
+            if (y > this.camera.y - 100 && y < this.camera.y + this.canvas.height + 100) {
+                // Basit bulut çizimi
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, 15, 0, Math.PI * 2);
+                this.ctx.arc(x + 15, y, 20, 0, Math.PI * 2);
+                this.ctx.arc(x + 30, y, 15, 0, Math.PI * 2);
+                this.ctx.arc(x + 15, y - 10, 15, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+        }
     }
     
     drawStar(x, y, outerRadius, innerRadius, points) {

@@ -40,11 +40,31 @@ body {
     gap: 5px;
 }
 
-.score, .high-score {
+.score, .high-score, .gold-count {
     font-weight: bold;
     color: #ffffff;
     font-size: 16px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.gold-count {
+    color: #FFD700;
+    font-size: 14px;
+    background: linear-gradient(45deg, #FFD700, #FFA500);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    animation: goldGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes goldGlow {
+    from {
+        filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.8));
+    }
+    to {
+        filter: drop-shadow(0 0 15px rgba(255, 215, 0, 1));
+    }
 }
 
 .controls-info {
@@ -407,6 +427,10 @@ body {
         font-size: 13px;
     }
     
+    .gold-count {
+        font-size: 12px;
+    }
+    
     .arrow-btn {
         width: 70px;
         height: 70px;
@@ -466,6 +490,10 @@ body {
     
     .score, .high-score {
         font-size: 12px;
+    }
+    
+    .gold-count {
+        font-size: 11px;
     }
     
     .super-jump-bar {
