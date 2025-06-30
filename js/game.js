@@ -96,6 +96,7 @@ class Game {
         // Basit mobil kontroller - sadece temel eventler
         const leftBtn = document.getElementById('leftBtn');
         const rightBtn = document.getElementById('rightBtn');
+        const superJumpBtn = document.getElementById('superJumpBtn');
         
         if (leftBtn) {
             leftBtn.addEventListener('touchstart', () => {
@@ -112,6 +113,21 @@ class Game {
             });
             rightBtn.addEventListener('touchend', () => {
                 this.keys['ArrowRight'] = false;
+            });
+        }
+        
+        if (superJumpBtn) {
+            superJumpBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (this.gameState === 'playing' && this.player.superJump()) {
+                    this.addTouchFeedback(superJumpBtn);
+                }
+            });
+            superJumpBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (this.gameState === 'playing' && this.player.superJump()) {
+                    this.addTouchFeedback(superJumpBtn);
+                }
             });
         }
         
@@ -172,6 +188,18 @@ class Game {
         
         if (this.keys['ArrowRight'] || this.keys['d'] || this.keys['D']) {
             this.player.moveRight();
+        }
+        
+        if (this.keys['s'] || this.keys['S']) {
+            if (this.player.superJump()) {
+                // Süper jump başarılı - ses efekti veya titreşim eklenebilir
+                if (navigator.vibrate) {
+                    navigator.vibrate(100);
+                }
+            }
+            // Tuşun tekrar basılmasını engellemek için sıfırla
+            this.keys['s'] = false;
+            this.keys['S'] = false;
         }
     }
     
@@ -291,6 +319,38 @@ class Game {
     updateUI() {
         document.getElementById('current-score').textContent = this.score;
         document.getElementById('high-score').textContent = this.highScore;
+        
+        // Süper jump UI'ını güncelle
+        this.updateSuperJumpUI();
+    }
+    
+    updateSuperJumpUI() {
+        const fill = document.getElementById('superJumpFill');
+        const container = document.querySelector('.super-jump-container');
+        const mobileBtn = document.getElementById('superJumpBtn');
+        
+        if (this.player.superJumpReady) {
+            // Süper jump hazır
+            fill.style.width = '100%';
+            container.classList.add('super-jump-ready');
+            document.querySelector('.super-jump-bar').classList.remove('cooling');
+            
+            if (mobileBtn) {
+                mobileBtn.classList.remove('disabled');
+                mobileBtn.classList.add('ready');
+            }
+        } else {
+            // Süper jump cooldown'da
+            const percentage = ((this.player.superJumpMaxCooldown - this.player.superJumpCooldown) / this.player.superJumpMaxCooldown) * 100;
+            fill.style.width = percentage + '%';
+            container.classList.remove('super-jump-ready');
+            document.querySelector('.super-jump-bar').classList.add('cooling');
+            
+            if (mobileBtn) {
+                mobileBtn.classList.add('disabled');
+                mobileBtn.classList.remove('ready');
+            }
+        }
     }
     
     render() {
