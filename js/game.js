@@ -51,6 +51,7 @@ class Game {
         document.getElementById('gameOverScreen').classList.add('hidden');
         document.getElementById('characterShop').classList.add('hidden');
         this.updateMenuUI();
+        this.updateGoToMenuBtn();
     }
 
     showCharacterShop() {
@@ -63,6 +64,7 @@ class Game {
         }
         document.getElementById('mainMenu').classList.add('hidden');
         this.updateShopUI();
+        this.updateGoToMenuBtn();
     }
 
     updateMenuUI() {
@@ -129,6 +131,7 @@ class Game {
         document.getElementById('startScreen').classList.remove('hidden');
         document.getElementById('gameOverScreen').classList.add('hidden');
         document.getElementById('mainMenu').classList.add('hidden');
+        this.updateGoToMenuBtn();
     }
 
     initializePlatforms() {
@@ -324,6 +327,16 @@ class Game {
                 this.showMainMenu();
             }
         });
+
+        // Ana Menüye Dön butonu
+        const goToMenuBtn = document.getElementById('goToMenuBtn');
+        if (goToMenuBtn) {
+            goToMenuBtn.addEventListener('click', () => {
+                this.showMainMenu();
+            });
+        }
+        // Ekran durumuna göre butonun görünürlüğünü ayarla
+        this.updateGoToMenuBtn();
     }
 
     addTouchFeedback(button = null) {
@@ -389,6 +402,7 @@ class Game {
         document.getElementById('startScreen').classList.add('hidden');
         document.getElementById('gameOverScreen').classList.add('hidden');
         document.getElementById('mainMenu').classList.add('hidden');
+        this.updateGoToMenuBtn();
     }
 
     handleInput() {

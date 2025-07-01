@@ -440,9 +440,12 @@ body {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 90%;
-        max-width: 380px;
-        z-index: 1000;
+        width: 95vw;
+        max-width: 420px;
+        min-width: 0;
+        box-sizing: border-box;
+        border-radius: 24px;
+        z-index: 2000;
     }
     
     .main-menu {
@@ -624,18 +627,16 @@ body {
 }
 
 .game-over-screen, .start-screen {
-    position: absolute;
+    position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(255, 255, 255, 0.95);
-    padding: 35px;
-    border-radius: 25px;
-    text-align: center;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-    z-index: 100;
-    backdrop-filter: blur(12px);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    width: 95vw;
+    max-width: 420px;
+    min-width: 0;
+    box-sizing: border-box;
+    border-radius: 24px;
+    z-index: 2000;
 }
 
 .game-over-screen.hidden, .start-screen.hidden {
@@ -937,4 +938,30 @@ body {
 .character-btn.selected:hover {
     transform: none;
     box-shadow: none;
+}
+
+/* Giriş ekranı kayma düzeltmesi ve responsive iyileştirme */
+.main-menu, .start-screen {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 95vw;
+    max-width: 420px;
+    min-width: 0;
+    box-sizing: border-box;
+    border-radius: 24px;
+    z-index: 2000;
+}
+
+@media (max-width: 480px) {
+    .main-menu, .start-screen {
+        width: 100vw;
+        max-width: 100vw;
+        min-width: 0;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 0;
+        padding: 10px;
+    }
 }
