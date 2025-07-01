@@ -642,26 +642,16 @@ class Game {
         if (this.gameState === 'playing' || this.gameState === 'gameOver') {
             // Platformları çiz
             this.platforms.forEach(platform => {
-                if (platform.y > this.camera.y - 50 && 
-                    platform.y < this.camera.y + this.canvas.height + 50) {
-                    platform.draw(this.ctx);
-                }
+                platform.draw(this.ctx);
             });
             // Goldları çiz
             this.golds.forEach(gold => {
-                if (gold.y > this.camera.y - 50 && 
-                    gold.y < this.camera.y + this.canvas.height + 50) {
-                    gold.draw(this.ctx);
-                }
+                gold.draw(this.ctx);
             });
             // Oyuncuyu çiz
             this.player.draw(this.ctx);
-        } else if (this.gameState === 'start') {
-            // Start ekranında sadece arka planı çiz
-            // Platforms ve player çizmeye gerek yok
-        } else if (this.gameState === 'menu' || this.gameState === 'shop') {
-            // Menü veya mağaza ekranında arka planı çiz, canvas'ı boş bırak
         }
+        // Start, menu, shop ekranlarında canvas'ı boş bırak
         this.ctx.restore();
     }
 
