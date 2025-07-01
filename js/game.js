@@ -1,8 +1,14 @@
+import Player from './player.js';
+import Platform from './platform.js';
+import Gold from './gold.js';
+import Utils from './utils.js';
+import Joystick from './joystick.js';
+
 class Game {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
-        
+
         this.player = new Player(200, 500);
         this.platforms = [];
         this.golds = []; // Gold parçaları
@@ -11,29 +17,31 @@ class Game {
         this.goldCount = 0; // Gold sayısı
         this.highScore = Utils.getHighScore();
         this.gameState = 'menu'; // 'menu', 'start', 'playing', 'gameOver', 'shop'
-        
+
         this.keys = {};
-        
+
         // Karakter sistemi
         this.selectedCharacter = Utils.getSelectedCharacter();
         this.ownedCharacters = Utils.getOwnedCharacters();
         this.totalGold = Utils.getTotalGold();
-        
+
         // FPS kontrolü için
         this.lastTime = 0;
         this.targetFPS = 60;
         this.frameInterval = 1000 / this.targetFPS;
-        
+
+        this.joystick = new Joystick(document.querySelector('.joystick-container'));
+
         this.initializePlatforms();
         this.setupEventListeners();
         this.updateUI();
-        
+
         // Ana menüyü göster
         this.showMainMenu();
-        
+
         this.gameLoop();
     }
-    
+
     showMainMenu() {
         this.gameState = 'menu';
         // Total gold'u yeniden yükle (oyun bittikten sonra artmış olabilir)
@@ -44,7 +52,7 @@ class Game {
         document.getElementById('characterShop').classList.add('hidden');
         this.updateMenuUI();
     }
-    
+
     showCharacterShop() {
         this.gameState = 'shop';
         // Total gold'u yeniden yükle
@@ -56,19 +64,19 @@ class Game {
         document.getElementById('mainMenu').classList.add('hidden');
         this.updateShopUI();
     }
-    
+
     updateMenuUI() {
         document.getElementById('menu-gold-count').textContent = this.totalGold;
         document.getElementById('menu-high-score').textContent = this.highScore;
         document.getElementById('menu-total-gold').textContent = this.totalGold;
     }
-    
+
     updateShopUI() {
         document.getElementById('shop-gold-count').textContent = this.totalGold;
-        
+
         // Karakter önizlemelerini güncelle
         this.drawCharacterPreviews();
-        
+
         // Karakter kartlarını güncelle
         const cards = document.querySelectorAll('.character-card');
         cards.forEach(card => {
@@ -76,9 +84,9 @@ class Game {
             const button = card.querySelector('.character-btn');
             const isOwned = this.ownedCharacters.includes(characterType);
             const isSelected = this.selectedCharacter === characterType;
-            
+
             card.classList.toggle('selected', isSelected);
-            
+
             if (isSelected) {
                 button.textContent = 'Seçili';
                 button.className = 'character-btn selected';
@@ -91,7 +99,7 @@ class Game {
             }
         });
     }
-    
+
     drawCharacterPreviews() {
         const previews = {
             'default': { body: '#f39c12', head: '#f39c12' },
@@ -101,36 +109,36 @@ class Game {
             'purple': { body: '#9b59b6', head: '#8e44ad' },
             'golden': { body: '#f1c40f', head: '#f39c12' }
         };
-        
+
         Object.keys(previews).forEach(type => {
             const preview = document.getElementById(`preview-${type}`);
             if (preview) {
                 const colors = previews[type];
                 preview.style.background = `linear-gradient(135deg, ${colors.body}, ${colors.head})`;
                 preview.style.border = `3px solid ${colors.head}`;
-                
+
                 if (type === 'golden') {
                     preview.style.boxShadow = '0 0 20px rgba(241, 196, 15, 0.6)';
                 }
             }
         });
     }
-    
+
     showStartScreen() {
         this.gameState = 'start';
         document.getElementById('startScreen').classList.remove('hidden');
         document.getElementById('gameOverScreen').classList.add('hidden');
         document.getElementById('mainMenu').classList.add('hidden');
     }
-    
+
     initializePlatforms() {
         // İlk platform (başlangıç)
         this.platforms.push(new Platform(150, 550, 'normal'));
-        
+
         // Daha az platform ve daha kolay mesafeler
         for (let i = 0; i < 30; i++) { // 60'tan 30'a düşürdük
             const x = Utils.getRandomFloat(20, this.canvas.width - 100);
-            
+
             // Daha dengeli mesafeler
             let minGap, maxGap;
             if (i < 15) {
@@ -146,21 +154,21 @@ class Game {
                 minGap = 60; // 55'ten 60'a
                 maxGap = 75; // 70'ten 75'e
             }
-            
+
             const y = 500 - (i * Utils.getRandomFloat(minGap, maxGap));
-            
+
             let type = 'normal';
             const rand = Math.random();
-            
+
             // Özel platform oranını daha da azalt
             if (i > 8) { // İlk 8 platform sadece normal
                 if (rand < 0.05) type = 'bouncy';     // 0.08'den 0.05'e
                 else if (rand < 0.08) type = 'breakable'; // 0.12'den 0.08'e
                 else if (rand < 0.12) type = 'moving';    // 0.18'den 0.12'ye
             }
-            
+
             this.platforms.push(new Platform(x, y, type));
-            
+
             // Gold üretimi - her 3-4 platformda bir
             if (i > 2 && Math.random() < 0.3) {
                 const goldX = Utils.getRandomFloat(30, this.canvas.width - 50);
@@ -169,12 +177,12 @@ class Game {
             }
         }
     }
-    
+
     setupEventListeners() {
         // Klavye kontrolleri
         document.addEventListener('keydown', (e) => {
             this.keys[e.key] = true;
-            
+
             if (e.key === ' ') {
                 e.preventDefault();
                 if (this.gameState === 'start' || this.gameState === 'gameOver') {
@@ -182,35 +190,35 @@ class Game {
                 }
             }
         });
-        
+
         document.addEventListener('keyup', (e) => {
             this.keys[e.key] = false;
         });
-        
+
         // Buton kontrolleri
         document.getElementById('startBtn').addEventListener('click', () => {
             this.startGame();
         });
-        
+
         document.getElementById('restartBtn').addEventListener('click', () => {
             this.startGame();
         });
-        
+
         // Ana menü butonları
         document.getElementById('playBtn').addEventListener('click', () => {
             this.gameState = 'start';
             document.getElementById('mainMenu').classList.add('hidden');
             document.getElementById('startScreen').classList.remove('hidden');
         });
-        
+
         document.getElementById('shopBtn').addEventListener('click', () => {
             this.showCharacterShop();
         });
-        
+
         document.getElementById('shopBackBtn').addEventListener('click', () => {
             this.showMainMenu();
         });
-        
+
         // Karakter mağazası - Event delegation kullan
         document.addEventListener('click', (e) => {
             if (e.target.closest('.character-card')) {
@@ -219,12 +227,17 @@ class Game {
                 this.handleCharacterSelection(characterType);
             }
         });
-        
+
         // İyileştirilmiş mobil kontroller
+        const mobileControls = document.querySelector('.mobile-controls');
+        if (getComputedStyle(mobileControls).display !== 'none') {
+            this.joystick = new Joystick(document.querySelector('.joystick-container'));
+        }
+
         const leftBtn = document.getElementById('leftBtn');
         const rightBtn = document.getElementById('rightBtn');
         const superJumpBtn = document.getElementById('superJumpBtn');
-        
+
         if (leftBtn) {
             // Touch events
             leftBtn.addEventListener('touchstart', (e) => {
@@ -254,7 +267,7 @@ class Game {
                 leftBtn.classList.remove('touching');
             });
         }
-        
+
         if (rightBtn) {
             // Touch events
             rightBtn.addEventListener('touchstart', (e) => {
@@ -284,7 +297,7 @@ class Game {
                 rightBtn.classList.remove('touching');
             });
         }
-        
+
         if (superJumpBtn) {
             const handleSuperJump = (e) => {
                 e.preventDefault();
@@ -296,15 +309,15 @@ class Game {
                     }, 150);
                 }
             };
-            
+
             superJumpBtn.addEventListener('touchstart', handleSuperJump);
             superJumpBtn.addEventListener('click', handleSuperJump);
         }
-        
+
         // Canvas boyutlandırma
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
-        
+
         // Modal dışına tıklandığında kapat
         document.getElementById('characterShop').addEventListener('click', (e) => {
             if (e.target.id === 'characterShop') {
@@ -312,7 +325,7 @@ class Game {
             }
         });
     }
-    
+
     addTouchFeedback(button = null) {
         // Güçlü titreşim feedback'i
         if (navigator.vibrate) {
@@ -322,36 +335,36 @@ class Game {
                 navigator.vibrate(40); // Normal butonlar için
             }
         }
-        
+
         // Button için gelişmiş görsel feedback
         if (button) {
             button.style.transform = 'scale(0.9)';
             button.style.filter = 'brightness(1.2)';
-            
+
             setTimeout(() => {
                 button.style.transform = '';
                 button.style.filter = '';
             }, 150);
         }
     }
-    
+
     resizeCanvas() {
         const container = document.querySelector('.game-container');
-        
+
         if (window.innerWidth <= 768) {
             // Mobil cihazlar için tam boyut optimizasyonu
             const availableHeight = window.innerHeight - 180; // UI ve kontroller için alan bırak
             const availableWidth = window.innerWidth - 20; // Padding için alan
-            
+
             // Aspect ratio'yu koru (2:3)
             let canvasWidth = Math.min(availableWidth, 400);
             let canvasHeight = canvasWidth * 1.5;
-            
+
             if (canvasHeight > availableHeight) {
                 canvasHeight = availableHeight;
                 canvasWidth = canvasHeight / 1.5;
             }
-            
+
             this.canvas.style.width = canvasWidth + 'px';
             this.canvas.style.height = canvasHeight + 'px';
         } else {
@@ -360,35 +373,40 @@ class Game {
             this.canvas.style.height = '600px';
         }
     }
-    
+
     startGame() {
         this.gameState = 'playing';
         this.score = 0;
         this.goldCount = 0; // Sadece oyun içi gold sayacını sıfırla (total gold korunur)
         this.camera.y = 0;
-        
+
         this.player = new Player(200, 500, this.selectedCharacter);
         this.platforms = [];
         this.golds = []; // Gold array'ini sıfırla
         this.initializePlatforms();
-        
+
         this.updateUI();
         document.getElementById('startScreen').classList.add('hidden');
         document.getElementById('gameOverScreen').classList.add('hidden');
         document.getElementById('mainMenu').classList.add('hidden');
     }
-    
+
     handleInput() {
         if (this.gameState !== 'playing') return;
-        
-        if (this.keys['ArrowLeft'] || this.keys['a'] || this.keys['A']) {
+
+        let horizontal = 0;
+        if (this.joystick) {
+            horizontal = this.joystick.horizontal;
+        }
+
+        if (this.keys['ArrowLeft'] || this.keys['a'] || this.keys['A'] || horizontal < -0.1) {
             this.player.moveLeft();
         }
-        
-        if (this.keys['ArrowRight'] || this.keys['d'] || this.keys['D']) {
+
+        if (this.keys['ArrowRight'] || this.keys['d'] || this.keys['D'] || horizontal > 0.1) {
             this.player.moveRight();
         }
-        
+
         if (this.keys['s'] || this.keys['S']) {
             if (this.player.superJump()) {
                 // Süper jump başarılı - ses efekti veya titreşim eklenebilir
@@ -401,23 +419,23 @@ class Game {
             this.keys['S'] = false;
         }
     }
-    
+
     update() {
         if (this.gameState !== 'playing') return;
-        
+
         this.handleInput();
         this.player.update(this.canvas);
-        
+
         // Tüm platformları güncelle
         this.platforms.forEach(platform => {
             platform.update(this.canvas);
         });
-        
+
         // Goldları güncelle
         this.golds.forEach(gold => {
             gold.update();
         });
-        
+
         this.checkCollisions();
         this.checkGoldCollisions();
         this.updateCamera();
@@ -426,17 +444,17 @@ class Game {
         this.checkGameOver();
         this.updateUI();
     }
-    
+
     checkCollisions() {
         const playerBox = this.player.getCollisionBox();
-        
+
         // Sadece oyuncuya yakın platformları kontrol et
         const nearbyPlatforms = this.platforms.filter(platform => 
             !platform.broken &&
             Math.abs(platform.y - this.player.y) < 50 &&
             Math.abs(platform.x - this.player.x) < 150
         );
-        
+
         nearbyPlatforms.forEach(platform => {
             const platformBox = {
                 x: platform.x,
@@ -444,29 +462,29 @@ class Game {
                 width: platform.width,
                 height: platform.height
             };
-            
+
             // İyileştirilmiş çarpışma tespiti - sadece aşağı düşerken
             if (this.player.velocityY > 0 && 
                 Utils.checkCollision(playerBox, platformBox) &&
                 this.player.y + this.player.height - 15 < platform.y) {
-                
+
                 platform.onPlayerLand(this.player);
                 this.player.jump();
             }
         });
     }
-    
+
     checkGoldCollisions() {
         const playerBox = this.player.getCollisionBox();
-        
+
         this.golds.forEach(gold => {
             if (!gold.collected) {
                 const goldBox = gold.getCollisionBox();
-                
+
                 if (Utils.checkCollision(playerBox, goldBox)) {
                     gold.collect();
                     this.goldCount++;
-                    
+
                     // Gold toplama efekti - titreşim
                     if (navigator.vibrate) {
                         navigator.vibrate(80);
@@ -474,39 +492,39 @@ class Game {
                 }
             }
         });
-        
+
         // Toplanmış goldları temizle
         this.golds = this.golds.filter(gold => !gold.collected);
     }
-    
+
     updateCamera() {
         const targetY = this.player.y - this.canvas.height / 2;
-        
+
         if (targetY < this.camera.y) {
             this.camera.y = targetY;
         }
     }
-    
+
     generatePlatforms() {
         if (this.platforms.length === 0) return;
-        
+
         let highestY = Math.min(...this.platforms.map(p => p.y));
-        
+
         // Basit platform üretimi - daha kolay mesafeler
         while (highestY > this.camera.y - 800) { // 1000'den 800'e
             const x = Utils.getRandomFloat(20, this.canvas.width - 100);
             highestY -= Utils.getRandomFloat(40, 65); // 60-90'dan 40-65'e
-            
+
             let type = 'normal';
             const rand = Math.random();
-            
+
             // Daha az özel platform
             if (rand < 0.05) type = 'bouncy';     // 0.1'den 0.05'e
             else if (rand < 0.1) type = 'breakable'; // 0.2'den 0.1'e
             else if (rand < 0.15) type = 'moving';    // 0.3'den 0.15'e
-            
+
             this.platforms.push(new Platform(x, highestY, type));
-            
+
             // Gold üretimi - her platformda %25 şans
             if (Math.random() < 0.25) {
                 const goldX = Utils.getRandomFloat(30, this.canvas.width - 50);
@@ -514,72 +532,72 @@ class Game {
                 this.golds.push(new Gold(goldX, goldY));
             }
         }
-        
+
         // Gereksiz platformları temizle
         this.platforms = this.platforms.filter(platform => 
             platform.y < this.camera.y + this.canvas.height + 200
         );
-        
+
         // Gereksiz goldları temizle
         this.golds = this.golds.filter(gold => 
             gold.y < this.camera.y + this.canvas.height + 200
         );
     }
-    
+
     updateScore() {
         const newScore = Math.max(0, Math.floor((500 - this.player.y) / 10));
         if (newScore > this.score) {
             this.score = newScore;
         }
     }
-    
+
     checkGameOver() {
         if (this.player.y > this.camera.y + this.canvas.height + 100) {
             this.gameOver();
         }
     }
-    
+
     gameOver() {
         this.gameState = 'gameOver';
-        
+
         // Goldları toplam gold'a ekle
         this.totalGold = Utils.addGold(this.goldCount);
-        
+
         const isNewRecord = Utils.saveHighScore(this.score);
         this.highScore = Utils.getHighScore();
-        
+
         document.getElementById('final-score').textContent = this.score;
         document.getElementById('final-gold').textContent = this.goldCount;
         document.getElementById('final-high-score').textContent = this.highScore;
         document.getElementById('gameOverScreen').classList.remove('hidden');
-        
+
         if (isNewRecord) {
             document.querySelector('.game-over-screen h2').textContent = 'Yeni Rekor!';
         } else {
             document.querySelector('.game-over-screen h2').textContent = 'Oyun Bitti!';
         }
     }
-    
+
     updateUI() {
         document.getElementById('current-score').textContent = this.score;
         document.getElementById('high-score').textContent = this.highScore;
         document.getElementById('gold-count').textContent = this.goldCount;
-        
+
         // Süper jump UI'ını güncelle
         this.updateSuperJumpUI();
     }
-    
+
     updateSuperJumpUI() {
         const fill = document.getElementById('superJumpFill');
         const container = document.querySelector('.super-jump-container');
         const mobileBtn = document.getElementById('superJumpBtn');
-        
+
         if (this.player.superJumpReady) {
             // Süper jump hazır
             fill.style.width = '100%';
             container.classList.add('super-jump-ready');
             document.querySelector('.super-jump-bar').classList.remove('cooling');
-            
+
             if (mobileBtn) {
                 mobileBtn.classList.remove('disabled');
                 mobileBtn.classList.add('ready');
@@ -590,22 +608,22 @@ class Game {
             fill.style.width = percentage + '%';
             container.classList.remove('super-jump-ready');
             document.querySelector('.super-jump-bar').classList.add('cooling');
-            
+
             if (mobileBtn) {
                 mobileBtn.classList.add('disabled');
                 mobileBtn.classList.remove('ready');
             }
         }
     }
-    
+
     render() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
+
         this.ctx.save();
         this.ctx.translate(0, -this.camera.y);
-        
+
         this.drawBackground();
-        
+
         // Oyun durumuna göre çizim
         if (this.gameState === 'playing' || this.gameState === 'gameOver') {
             // Platformları çiz
@@ -615,7 +633,7 @@ class Game {
                     platform.draw(this.ctx);
                 }
             });
-            
+
             // Goldları çiz
             this.golds.forEach(gold => {
                 if (gold.y > this.camera.y - 50 && 
@@ -623,24 +641,24 @@ class Game {
                     gold.draw(this.ctx);
                 }
             });
-            
+
             // Oyuncuyu çiz
             this.player.draw(this.ctx);
         } else if (this.gameState === 'start') {
             // Start ekranında sadece arka planı çiz
             // Platforms ve player çizmeye gerek yok
         }
-        
+
         this.ctx.restore();
     }
-    
+
     drawBackground() {
         // Renkli gradient arka plan
         const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
-        
+
         // Yüksekliğe göre renk değişimi
         const height = -this.camera.y;
-        
+
         if (height < 500) {
             // Başlangıç - Mavi tonları
             gradient.addColorStop(0, '#87CEEB');
@@ -666,52 +684,52 @@ class Game {
             gradient.addColorStop(0.6, '#546E7A');
             gradient.addColorStop(1, '#78909C');
         }
-        
+
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        
+
         // Yıldızlar ekle (yüksek seviyede)
         if (height > 2000) {
             this.drawStars();
         }
-        
+
         // Bulutlar ekle (düşük seviyede)
         if (height < 1000) {
             this.drawClouds();
         }
     }
-    
+
     drawStars() {
         this.ctx.fillStyle = '#FFFFFF';
         this.ctx.globalAlpha = 0.8;
-        
+
         // Kamera pozisyonuna göre yıldız konumları
         const starCount = 15;
         const baseY = Math.floor(this.camera.y / 200) * 200;
-        
+
         for (let i = 0; i < starCount; i++) {
             const x = (i * 37 + 123) % this.canvas.width;
             const y = baseY + (i * 43 + 67) % 600;
-            
+
             if (y > this.camera.y - 50 && y < this.camera.y + this.canvas.height + 50) {
                 this.drawStar(x, y, 2, 1, 4);
             }
         }
-        
+
         this.ctx.globalAlpha = 1;
     }
-    
+
     drawClouds() {
         this.ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-        
+
         // Kamera pozisyonuna göre bulut konumları
         const cloudCount = 8;
         const baseY = Math.floor(this.camera.y / 150) * 150;
-        
+
         for (let i = 0; i < cloudCount; i++) {
             const x = (i * 67 + 45) % (this.canvas.width + 100) - 50;
             const y = baseY + (i * 89 + 234) % 450;
-            
+
             if (y > this.camera.y - 100 && y < this.camera.y + this.canvas.height + 100) {
                 // Basit bulut çizimi
                 this.ctx.beginPath();
@@ -723,33 +741,33 @@ class Game {
             }
         }
     }
-    
+
     drawStar(x, y, outerRadius, innerRadius, points) {
         this.ctx.save();
         this.ctx.translate(x, y);
         this.ctx.beginPath();
-        
+
         for (let i = 0; i < points * 2; i++) {
             const radius = i % 2 === 0 ? outerRadius : innerRadius;
             const angle = (i * Math.PI) / points;
             const px = radius * Math.cos(angle);
             const py = radius * Math.sin(angle);
-            
+
             if (i === 0) {
                 this.ctx.moveTo(px, py);
             } else {
                 this.ctx.lineTo(px, py);
             }
         }
-        
+
         this.ctx.closePath();
         this.ctx.fill();
         this.ctx.restore();
     }
-    
+
     gameLoop(currentTime = 0) {
         const deltaTime = currentTime - this.lastTime;
-        
+
         if (deltaTime >= this.frameInterval) {
             if (this.gameState === 'playing') {
                 this.update();
@@ -757,14 +775,14 @@ class Game {
             this.render();
             this.lastTime = currentTime;
         }
-        
+
         requestAnimationFrame((time) => this.gameLoop(time));
     }
-    
+
     handleCharacterSelection(characterType) {
         const isOwned = this.ownedCharacters.includes(characterType);
         const price = Utils.getCharacterPrice(characterType);
-        
+
         if (isOwned) {
             // Karakteri seç
             this.selectedCharacter = characterType;

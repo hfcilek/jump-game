@@ -1,4 +1,4 @@
-class Platform {
+export default class Platform {
     constructor(x, y, type = 'normal') {
         this.x = x;
         this.y = y;
@@ -9,11 +9,11 @@ class Platform {
         this.moveDirection = 1;
         this.moveSpeed = 1;
         this.bounced = false;
-        
+
         // Platform özelliklerine göre renk belirleme
         this.setColor();
     }
-    
+
     setColor() {
         switch(this.type) {
             case 'normal':
@@ -33,23 +33,23 @@ class Platform {
                 this.color = '#2ecc71';
         }
     }
-    
+
     update(canvas) {
         if (this.type === 'moving' && !this.broken) {
             this.x += this.moveDirection * this.moveSpeed;
-            
+
             // Ekran sınırlarında geri döndür
             if (this.x <= 0 || this.x >= canvas.width - this.width) {
                 this.moveDirection *= -1;
             }
         }
     }
-    
+
     draw(ctx) {
         if (this.broken) return;
-        
+
         ctx.fillStyle = this.color;
-        
+
         // Platform tipine göre çizim
         switch(this.type) {
             case 'bouncy':
@@ -59,7 +59,7 @@ class Platform {
                 ctx.fillRect(this.x + 5, this.y + 2, this.width - 10, 4);
                 ctx.fillRect(this.x + 10, this.y + 8, this.width - 20, 4);
                 break;
-                
+
             case 'breakable':
                 // Kırılabilir platform - çatlak efekti
                 ctx.fillRect(this.x, this.y, this.width, this.height);
@@ -72,7 +72,7 @@ class Platform {
                 ctx.lineTo(this.x + 45, this.y + this.height);
                 ctx.stroke();
                 break;
-                
+
             case 'moving':
                 // Hareketli platform - ok işaretleri
                 ctx.fillRect(this.x, this.y, this.width, this.height);
@@ -90,7 +90,7 @@ class Platform {
                 ctx.lineTo(this.x + this.width - 15, this.y + 9);
                 ctx.fill();
                 break;
-                
+
             default:
                 // Normal platform
                 ctx.fillRect(this.x, this.y, this.width, this.height);
@@ -99,23 +99,23 @@ class Platform {
                 ctx.fillRect(this.x, this.y, this.width, 3);
         }
     }
-    
+
     onPlayerLand(player) {
         if (this.broken) return false;
-        
+
         switch(this.type) {
             case 'breakable':
                 this.broken = true;
                 return true;
-                
+
             case 'bouncy':
                 player.velocityY = -18; // Ekstra güçlü zıplama
                 return true;
-                
+
             case 'normal':
             case 'moving':
                 return true;
-                
+
             default:
                 return true;
         }
