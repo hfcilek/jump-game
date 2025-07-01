@@ -808,6 +808,17 @@ class Game {
             }
         }
     }
+
+    updateGoToMenuBtn() {
+        // "Ana Menü" butonunu sadece ana menüde gizle, diğer ekranlarda göster
+        const goToMenuBtn = document.getElementById('goToMenuBtn');
+        if (!goToMenuBtn) return;
+        if (this.gameState === 'menu') {
+            goToMenuBtn.classList.add('hidden');
+        } else {
+            goToMenuBtn.classList.remove('hidden');
+        }
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
