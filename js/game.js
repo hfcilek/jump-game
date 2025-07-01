@@ -363,28 +363,30 @@ class Game {
 
     resizeCanvas() {
         const container = document.querySelector('.game-container');
-
+        let canvasWidth, canvasHeight;
         if (window.innerWidth <= 768) {
             // Mobil cihazlar için tam boyut optimizasyonu
             const availableHeight = window.innerHeight - 180; // UI ve kontroller için alan bırak
             const availableWidth = window.innerWidth - 20; // Padding için alan
 
             // Aspect ratio'yu koru (2:3)
-            let canvasWidth = Math.min(availableWidth, 400);
-            let canvasHeight = canvasWidth * 1.5;
+            canvasWidth = Math.min(availableWidth, 400);
+            canvasHeight = canvasWidth * 1.5;
 
             if (canvasHeight > availableHeight) {
                 canvasHeight = availableHeight;
                 canvasWidth = canvasHeight / 1.5;
             }
-
-            this.canvas.style.width = canvasWidth + 'px';
-            this.canvas.style.height = canvasHeight + 'px';
         } else {
             // Desktop için standart boyut
-            this.canvas.style.width = '400px';
-            this.canvas.style.height = '600px';
+            canvasWidth = 400;
+            canvasHeight = 600;
         }
+        // Hem style hem attribute olarak ayarla
+        this.canvas.style.width = canvasWidth + 'px';
+        this.canvas.style.height = canvasHeight + 'px';
+        this.canvas.width = Math.round(canvasWidth);
+        this.canvas.height = Math.round(canvasHeight);
     }
 
     startGame() {
