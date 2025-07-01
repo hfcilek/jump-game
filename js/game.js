@@ -632,10 +632,8 @@ class Game {
 
     render() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
         this.ctx.save();
         this.ctx.translate(0, -this.camera.y);
-
         this.drawBackground();
 
         // Oyun durumuna göre çizim
@@ -647,7 +645,6 @@ class Game {
                     platform.draw(this.ctx);
                 }
             });
-
             // Goldları çiz
             this.golds.forEach(gold => {
                 if (gold.y > this.camera.y - 50 && 
@@ -655,14 +652,14 @@ class Game {
                     gold.draw(this.ctx);
                 }
             });
-
             // Oyuncuyu çiz
             this.player.draw(this.ctx);
         } else if (this.gameState === 'start') {
             // Start ekranında sadece arka planı çiz
             // Platforms ve player çizmeye gerek yok
+        } else if (this.gameState === 'menu' || this.gameState === 'shop') {
+            // Menü veya mağaza ekranında arka planı çiz, canvas'ı boş bırak
         }
-
         this.ctx.restore();
     }
 
