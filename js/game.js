@@ -112,16 +112,24 @@ class Game {
             'golden': { body: '#f1c40f', head: '#f39c12' }
         };
 
+        console.log('Drawing character previews...');
         Object.keys(previews).forEach(type => {
             const preview = document.getElementById(`preview-${type}`);
+            console.log(`Preview ${type}:`, preview ? 'Found' : 'Not found');
             if (preview) {
                 const colors = previews[type];
                 preview.style.background = `linear-gradient(135deg, ${colors.body}, ${colors.head})`;
                 preview.style.border = `3px solid ${colors.head}`;
+                
+                // Ensure the preview is visible
+                preview.style.display = 'block';
+                preview.style.minHeight = '65px';
+                preview.style.minWidth = '65px';
 
                 if (type === 'golden') {
                     preview.style.boxShadow = '0 0 20px rgba(241, 196, 15, 0.6)';
                 }
+                console.log(`Applied styles to ${type} preview`);
             }
         });
     }
