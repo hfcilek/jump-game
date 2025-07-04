@@ -204,7 +204,7 @@ class Game {
         });
 
         document.getElementById('restartBtn').addEventListener('click', () => {
-            this.startGame();
+            this.showMainMenu();
         });
 
         // Ana menü butonları
