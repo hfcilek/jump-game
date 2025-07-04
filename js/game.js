@@ -64,6 +64,12 @@ class Game {
         }
         document.getElementById('mainMenu').classList.add('hidden');
         this.updateShopUI();
+        
+        // Kısa bir gecikme ile character previews'i tekrar çiz (DOM render sonrası)
+        setTimeout(() => {
+            this.drawCharacterPreviews();
+        }, 50);
+        
         this.updateGoToMenuBtn();
     }
 
@@ -103,6 +109,7 @@ class Game {
     }
 
     drawCharacterPreviews() {
+        console.log('Drawing character previews...'); // Debug log
         const previews = {
             'default': { body: '#f39c12', head: '#f39c12' },
             'red': { body: '#e74c3c', head: '#c0392b' },
@@ -114,14 +121,31 @@ class Game {
 
         Object.keys(previews).forEach(type => {
             const preview = document.getElementById(`preview-${type}`);
+            console.log(`Preview element for ${type}:`, preview); // Debug log
             if (preview) {
                 const colors = previews[type];
+                
+                // Clear any existing content and add more explicit styling
+                preview.innerHTML = '';
                 preview.style.background = `linear-gradient(135deg, ${colors.body}, ${colors.head})`;
                 preview.style.border = `3px solid ${colors.head}`;
+                preview.style.minHeight = '65px';
+                preview.style.minWidth = '65px';
+                preview.style.borderRadius = '50%';
+                preview.style.display = 'flex';
+                preview.style.alignItems = 'center';
+                preview.style.justifyContent = 'center';
+                
+                // Important: Use !important to override any conflicting styles
+                preview.style.setProperty('background', `linear-gradient(135deg, ${colors.body}, ${colors.head})`, 'important');
+                
+                console.log(`Applied styles to ${type}:`, preview.style.background); // Debug log
 
                 if (type === 'golden') {
                     preview.style.boxShadow = '0 0 20px rgba(241, 196, 15, 0.6)';
                 }
+            } else {
+                console.log(`Element not found: preview-${type}`); // Debug log
             }
         });
     }
