@@ -1,5 +1,5 @@
 export default class Platform {
-    constructor(x, y, type = 'normal') {
+    constructor(x, y, type = 'normal', difficultyLevel = 0) {
         this.x = x;
         this.y = y;
         this.width = 80;
@@ -7,7 +7,8 @@ export default class Platform {
         this.type = type;
         this.broken = false;
         this.moveDirection = 1;
-        this.moveSpeed = 1;
+        // Hareketli platformların hızı zorluk seviyesiyle artar
+        this.moveSpeed = type === 'moving' ? 1 + (difficultyLevel * 0.15) : 1;
         this.bounced = false;
 
         // Platform özelliklerine göre renk belirleme
