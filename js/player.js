@@ -87,8 +87,8 @@ export default class Player {
 
         this.y += this.velocityY;
 
-        // Yatay sürtünme
-        this.velocityX *= 0.8;
+        // Yatay sürtünme - daha akıcı kontrol için
+        this.velocityX *= 0.85;
 
         // Yön belirleme
         if (this.velocityX > 0.1) {
@@ -114,11 +114,11 @@ export default class Player {
     }
 
     moveLeft() {
-        this.velocityX = Math.max(this.velocityX - 0.8, -this.speed);
+        this.velocityX = Math.max(this.velocityX - 1.0, -this.speed);
     }
 
     moveRight() {
-        this.velocityX = Math.min(this.velocityX + 0.8, this.speed);
+        this.velocityX = Math.min(this.velocityX + 1.0, this.speed);
     }
 
     jump() {

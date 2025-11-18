@@ -143,8 +143,8 @@ class Game {
     }
 
     initializePlatforms() {
-        // İlk platform (başlangıç)
-        this.platforms.push(new Platform(150, 550, 'normal'));
+        // İlk platform (başlangıç) - zorluk seviyesi 0
+        this.platforms.push(new Platform(150, 550, 'normal', 0));
 
         // Daha az platform ve daha kolay mesafeler
         for (let i = 0; i < 30; i++) { // 60'tan 30'a düşürdük
@@ -178,7 +178,8 @@ class Game {
                 else if (rand < 0.12) type = 'moving';    // 0.18'den 0.12'ye
             }
 
-            this.platforms.push(new Platform(x, y, type));
+            // Başlangıçta zorluk seviyesi 0
+            this.platforms.push(new Platform(x, y, type, 0));
 
             // Gold üretimi - her 3-4 platformda bir
             if (i > 2 && Math.random() < 0.3) {
@@ -534,20 +535,32 @@ class Game {
 
         let highestY = Math.min(...this.platforms.map(p => p.y));
 
-        // Basit platform üretimi - daha kolay mesafeler
-        while (highestY > this.camera.y - 800) { // 1000'den 800'e
+        // Zorluk seviyesini skora göre hesapla
+        const difficultyLevel = Math.min(Math.floor(this.score / 100), 10); // 0-10 arası
+
+        // Platform mesafesi - skorla artar
+        const baseMinGap = 40;
+        const baseMaxGap = 65;
+        const gapIncrease = difficultyLevel * 3; // Her 100 puanda 3 birim artış
+        const minGap = baseMinGap + gapIncrease;
+        const maxGap = baseMaxGap + gapIncrease;
+
+        // Basit platform üretimi - skora göre zorlaşan mesafeler
+        while (highestY > this.camera.y - 800) {
             const x = Utils.getRandomFloat(20, this.canvas.width - 100);
-            highestY -= Utils.getRandomFloat(40, 65); // 60-90'dan 40-65'e
+            highestY -= Utils.getRandomFloat(minGap, maxGap);
 
             let type = 'normal';
             const rand = Math.random();
 
-            // Daha az özel platform
-            if (rand < 0.05) type = 'bouncy';     // 0.1'den 0.05'e
-            else if (rand < 0.1) type = 'breakable'; // 0.2'den 0.1'e
-            else if (rand < 0.15) type = 'moving';    // 0.3'den 0.15'e
+            // Özel platform oranı - skorla artar
+            const specialPlatformChance = Math.min(0.05 + (difficultyLevel * 0.02), 0.35);
+            
+            if (rand < specialPlatformChance * 0.3) type = 'bouncy';
+            else if (rand < specialPlatformChance * 0.6) type = 'breakable';
+            else if (rand < specialPlatformChance) type = 'moving';
 
-            this.platforms.push(new Platform(x, highestY, type));
+            this.platforms.push(new Platform(x, highestY, type, difficultyLevel));
 
             // Gold üretimi - her platformda %25 şans
             if (Math.random() < 0.25) {
